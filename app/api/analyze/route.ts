@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
-import { z, ZodError } from "zod";
-import { analyzeDocument } from "@/lib/ai/analyze-document";
+import { z } from "zod";
+import { analyzeDocument, ModelOutputError } from "@/lib/ai/analyze-document";
 
 const MIN_TEXT_LENGTH = 50;
 
@@ -35,22 +35,25 @@ export async function POST(request: NextRequest) {
     const result = await analyzeDocument(parsed.data.text);
     return Response.json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "";
+    const message = err instanceof Error ? err.message : String(err);
 
     if (message.includes("ANTHROPIC_API_KEY")) {
+      console.error("[/api/analyze] Configuration error:", message);
       return Response.json(
         { error: "Server configuration error. Contact the site administrator." },
         { status: 500 }
       );
     }
 
-    if (err instanceof ZodError || message.includes("invalid JSON")) {
+    if (err instanceof ModelOutputError) {
+      console.error("[/api/analyze] Model output error:", message);
       return Response.json(
         { error: "The model returned an unexpected response. Please try again." },
         { status: 502 }
       );
     }
 
+    console.error("[/api/analyze] Unexpected error:", err);
     return Response.json(
       { error: "Analysis failed. Please try again." },
       { status: 500 }

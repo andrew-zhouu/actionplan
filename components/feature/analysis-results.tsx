@@ -20,32 +20,36 @@ export function AnalysisResults({ result }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
-            Document type
-          </p>
-          <p className="text-lg font-semibold text-zinc-900">{documentType}</p>
+      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-6">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              Document type
+            </p>
+            <p className="mt-1 text-xl font-semibold leading-snug text-zinc-900">
+              {documentType}
+            </p>
+          </div>
+          <ReadabilityBadge
+            complexityLevel={complexityLevel}
+            readabilityScore={readabilityScore}
+          />
         </div>
-        <ReadabilityBadge
-          complexityLevel={complexityLevel}
-          readabilityScore={readabilityScore}
-        />
       </div>
 
       <ResultCard title="Summary" icon="📋">
-        <p className="text-sm leading-relaxed text-zinc-700">{summary}</p>
+        <p className="text-sm leading-relaxed text-zinc-600">{summary}</p>
       </ResultCard>
 
       {actionItems.length > 0 && (
         <ResultCard title="Action Items" icon="✅">
-          <ol className="space-y-2">
+          <ol className="space-y-3">
             {actionItems.map((item, i) => (
-              <li key={i} className="flex gap-3 text-sm text-zinc-700">
-                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
+              <li key={i} className="flex gap-3 text-sm">
+                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
                   {i + 1}
                 </span>
-                {item}
+                <span className="leading-relaxed text-zinc-700">{item}</span>
               </li>
             ))}
           </ol>
@@ -54,15 +58,17 @@ export function AnalysisResults({ result }: Props) {
 
       {deadlines.length > 0 && (
         <ResultCard title="Deadlines" icon="📅">
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {deadlines.map((deadline, i) => (
-              <li key={i} className="text-sm text-zinc-700">
+              <li key={i} className="border-l-2 border-zinc-200 pl-3 text-sm">
                 {deadline.date && (
-                  <span className="font-medium text-zinc-900">
-                    {deadline.date} —{" "}
+                  <span className="block font-semibold text-zinc-900">
+                    {deadline.date}
                   </span>
                 )}
-                {deadline.description}
+                <span className="leading-relaxed text-zinc-600">
+                  {deadline.description}
+                </span>
               </li>
             ))}
           </ul>
@@ -71,11 +77,11 @@ export function AnalysisResults({ result }: Props) {
 
       {risks.length > 0 && (
         <ResultCard title="Risks & Gotchas" icon="⚠️">
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {risks.map((risk, i) => (
-              <li key={i} className="flex gap-2 text-sm text-zinc-700">
-                <span className="mt-0.5 shrink-0 text-amber-500">•</span>
-                {risk}
+              <li key={i} className="flex gap-3 text-sm">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-400" />
+                <span className="leading-relaxed text-zinc-700">{risk}</span>
               </li>
             ))}
           </ul>
@@ -84,11 +90,11 @@ export function AnalysisResults({ result }: Props) {
 
       {questionsToAsk.length > 0 && (
         <ResultCard title="Questions to Ask" icon="❓">
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {questionsToAsk.map((question, i) => (
-              <li key={i} className="flex gap-2 text-sm text-zinc-700">
-                <span className="mt-0.5 shrink-0 text-blue-500">•</span>
-                {question}
+              <li key={i} className="flex gap-3 text-sm">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-blue-400" />
+                <span className="leading-relaxed text-zinc-700">{question}</span>
               </li>
             ))}
           </ul>
