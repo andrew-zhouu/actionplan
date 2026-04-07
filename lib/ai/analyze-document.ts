@@ -10,6 +10,15 @@ import type { AnalysisResult } from "@/types/analysis";
 // All provider-specific logic is isolated to this file.
 // To swap providers: replace getClient() and callModel() only.
 
+// Thrown when the model returns output that cannot be parsed or validated.
+// Caught by the route to return a 502 rather than a generic 500.
+export class ModelOutputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ModelOutputError";
+  }
+}
+
 function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -32,10 +41,43 @@ async function callModel(systemPrompt: string, userPrompt: string): Promise<stri
   });
 
   const block = response.content[0];
+  if (!block) {
+    throw new ModelOutputError("Model returned an empty response");
+  }
   if (block.type !== "text") {
-    throw new Error("Unexpected non-text response from model");
+    throw new ModelOutputError(`Unexpected response block type: "${block.type}"`);
   }
   return block.text;
+}
+
+// Strips markdown code fences that models sometimes add despite instructions.
+// Handles: ```json\n...\n``` and ```\n...\n```
+function stripCodeFences(text: string): string {
+  return text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+}
+
+// Attempts to extract a JSON object from model output that may contain
+// surrounding prose or code fences. Returns the best candidate string;
+// JSON.parse in the caller will surface any remaining parse errors.
+function extractJSON(raw: string): string {
+  const trimmed = raw.trim();
+
+  // Happy path: response is already a bare JSON object
+  if (trimmed.startsWith("{")) return trimmed;
+
+  // Strip code fences and try again
+  const stripped = stripCodeFences(trimmed);
+  if (stripped.startsWith("{")) return stripped;
+
+  // Last resort: find the first {...} block in mixed-content output
+  const match = trimmed.match(/\{[\s\S]*\}/);
+  if (match) return match[0];
+
+  // Nothing found — return trimmed original and let JSON.parse fail clearly
+  return trimmed;
 }
 
 export async function analyzeDocument(text: string): Promise<AnalysisResult> {
@@ -61,19 +103,27 @@ export async function analyzeDocument(text: string): Promise<AnalysisResult> {
   // Step 5: Call model
   const raw = await callModel(SYSTEM_PROMPT, userPrompt);
 
-  // Step 6: Parse and validate model output against zod schema
+  // Step 6: Extract and parse JSON from model output
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(extractJSON(raw));
   } catch {
-    throw new Error("Model returned invalid JSON");
+    throw new ModelOutputError(
+      `Model output could not be parsed as JSON. Raw response: ${raw.slice(0, 200)}`
+    );
   }
 
-  const aiOutput = AIOutputSchema.parse(parsed);
+  // Step 7: Validate parsed output against schema
+  const validation = AIOutputSchema.safeParse(parsed);
+  if (!validation.success) {
+    throw new ModelOutputError(
+      `Model output failed schema validation: ${validation.error.issues.map((i) => i.message).join(", ")}`
+    );
+  }
 
-  // Step 7: Merge deterministic fields into final result
+  // Step 8: Merge deterministic fields into final result
   return {
-    ...aiOutput,
+    ...validation.data,
     readabilityScore,
     complexityLevel,
   };
