@@ -66,37 +66,39 @@ export function ActionPlanForm() {
   const canSubmit = charCount >= MIN_LENGTH && !isOverLimit && !loading;
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Paste a confusing email, letter, policy, or document here…"
-          rows={10}
-          maxLength={MAX_LENGTH}
-          disabled={loading}
-          className="w-full resize-y rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm leading-relaxed text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 disabled:opacity-50"
-        />
-        <div className="flex items-center justify-between">
-          <p className={`text-xs ${isOverLimit ? "text-red-500" : "text-zinc-400"}`}>
-            {isTooShort
-              ? `${MIN_LENGTH - charCount} more characters needed`
-              : isOverLimit
-              ? `${charCount - MAX_LENGTH} characters over limit`
-              : charCount > 0
-              ? `${charCount.toLocaleString()} characters`
-              : ""}
-          </p>
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {loading && (
-              <span className="size-4 animate-spin rounded-full border-2 border-zinc-500 border-t-white" />
-            )}
-            {loading ? "Analyzing…" : "Analyze"}
-          </button>
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit}>
+        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Paste a confusing email, letter, policy, or document here…"
+            rows={10}
+            maxLength={MAX_LENGTH}
+            disabled={loading}
+            className="w-full resize-y border-0 bg-transparent px-4 py-4 text-sm leading-relaxed text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-0 disabled:opacity-50"
+          />
+          <div className="flex items-center justify-between border-t border-zinc-100 px-4 py-3">
+            <p className={`text-xs ${isOverLimit ? "text-red-500" : "text-zinc-400"}`}>
+              {isTooShort
+                ? `${MIN_LENGTH - charCount} more characters needed`
+                : isOverLimit
+                ? `${charCount - MAX_LENGTH} characters over limit`
+                : charCount > 0
+                ? `${charCount.toLocaleString()} characters`
+                : ""}
+            </p>
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {loading && (
+                <span className="size-4 animate-spin rounded-full border-2 border-zinc-500 border-t-white" />
+              )}
+              {loading ? "Analyzing…" : "Analyze"}
+            </button>
+          </div>
         </div>
       </form>
 
