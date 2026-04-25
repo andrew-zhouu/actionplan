@@ -102,11 +102,17 @@ type TaskItem = {
   meta?:        string;
   parsedDate?:  Date;
   done:         boolean;
+  overdue:      boolean;
 };
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 
-export default async function TasksPage() {
+type Props = { searchParams: Promise<{ show?: string }> };
+
+export default async function TasksPage({ searchParams }: Props) {
+  const { show } = await searchParams;
+  const showCompleted = show === "all";
+
   // 1. Fetch documents
   let docs: { id: string; documentType: string; result: string }[] = [];
   try {
@@ -116,7 +122,6 @@ export default async function TasksPage() {
       .orderBy(desc(documents.createdAt))
       .limit(50);
   } catch (err) {
-    // Documents table is missing — fundamental schema issue
     return (
       <>
         <Topbar crumbs={["Tasks"]} />
@@ -144,14 +149,13 @@ export default async function TasksPage() {
   } catch (err) {
     if (isTableMissing(err)) {
       completionsTableMissing = true;
-    }
-    // Other errors: log and continue without completion state (non-fatal)
-    else {
+    } else {
       console.error("[/tasks] Failed to load task_completions:", err);
     }
   }
 
   // 3. Derive tasks from stored result JSON
+  const now = new Date();
   const deadlines: TaskItem[] = [];
   const actionItems: TaskItem[] = [];
 
@@ -163,12 +167,13 @@ export default async function TasksPage() {
     try {
       parsed = JSON.parse(doc.result);
     } catch {
-      continue; // skip malformed rows silently
+      continue;
     }
 
     for (let i = 0; i < (parsed.deadlines ?? []).length; i++) {
       const d = parsed.deadlines![i];
       const pd = parseDate(d.date);
+      const done = completionKeys.has(`${doc.id}:deadline:${i}`);
       deadlines.push({
         documentId:   doc.id,
         documentType: doc.documentType,
@@ -177,7 +182,8 @@ export default async function TasksPage() {
         label:        d.description,
         meta:         pd ? formatDate(pd) : d.date,
         parsedDate:   pd ?? undefined,
-        done:         completionKeys.has(`${doc.id}:deadline:${i}`),
+        done,
+        overdue:      !!pd && pd < now && !done,
       });
     }
 
@@ -189,11 +195,12 @@ export default async function TasksPage() {
         taskIndex:    i,
         label:        parsed.actionItems![i],
         done:         completionKeys.has(`${doc.id}:action_item:${i}`),
+        overdue:      false,
       });
     }
   }
 
-  // 4. Sort deadlines: dated first (soonest to latest), undated at bottom
+  // 4. Sort deadlines: overdue first, then upcoming by date, undated at bottom
   deadlines.sort((a, b) => {
     if (a.parsedDate && b.parsedDate) return a.parsedDate.getTime() - b.parsedDate.getTime();
     if (a.parsedDate) return -1;
@@ -202,6 +209,12 @@ export default async function TasksPage() {
   });
 
   const hasAnyTask = deadlines.length > 0 || actionItems.length > 0;
+  const incompleteCount =
+    deadlines.filter(t => !t.done).length + actionItems.filter(t => !t.done).length;
+
+  const visibleDeadlines   = showCompleted ? deadlines   : deadlines.filter(t => !t.done);
+  const visibleActionItems = showCompleted ? actionItems : actionItems.filter(t => !t.done);
+  const hasVisibleTask = visibleDeadlines.length > 0 || visibleActionItems.length > 0;
 
   return (
     <>
@@ -213,49 +226,80 @@ export default async function TasksPage() {
           <EmptyTasks />
         ) : (
           <>
-            {deadlines.length > 0 && (
-              <section>
-                <SectionHeader title="Deadlines" count={deadlines.length} />
-                <ul>
-                  {deadlines.map((item) => (
-                    <li key={`${item.documentId}:${item.taskIndex}`}>
-                      <TaskRow
-                        documentId={item.documentId}
-                        kind="deadline"
-                        taskIndex={item.taskIndex}
-                        done={item.done}
-                        disabled={completionsTableMissing}
-                        label={item.label}
-                        meta={item.meta}
-                        sourceLabel={item.documentType}
-                        sourceHref={`/docs/${item.documentId}`}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            {/* Controls bar */}
+            <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-3">
+              <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
+                {incompleteCount === 0
+                  ? "All complete"
+                  : `${incompleteCount} remaining`}
+              </p>
+              <Link
+                href={showCompleted ? "/tasks" : "/tasks?show=all"}
+                className="text-[11px] font-medium text-zinc-400 transition-colors hover:text-zinc-700"
+              >
+                {showCompleted ? "Hide completed" : "Show completed"}
+              </Link>
+            </div>
 
-            {actionItems.length > 0 && (
-              <section>
-                <SectionHeader title="Action items" count={actionItems.length} />
-                <ul>
-                  {actionItems.map((item) => (
-                    <li key={`${item.documentId}:${item.taskIndex}`}>
-                      <TaskRow
-                        documentId={item.documentId}
-                        kind="action_item"
-                        taskIndex={item.taskIndex}
-                        done={item.done}
-                        disabled={completionsTableMissing}
-                        label={item.label}
-                        sourceLabel={item.documentType}
-                        sourceHref={`/docs/${item.documentId}`}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </section>
+            {!hasVisibleTask ? (
+              /* All tasks done and hide-completed is on */
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm text-zinc-400">
+                  All tasks complete.{" "}
+                  <Link href="/tasks?show=all" className="font-medium text-zinc-600 hover:text-zinc-900">
+                    Show completed →
+                  </Link>
+                </p>
+              </div>
+            ) : (
+              <>
+                {visibleDeadlines.length > 0 && (
+                  <section>
+                    <SectionHeader title="Deadlines" count={visibleDeadlines.length} />
+                    <ul>
+                      {visibleDeadlines.map((item) => (
+                        <li key={`${item.documentId}:${item.taskIndex}`}>
+                          <TaskRow
+                            documentId={item.documentId}
+                            kind="deadline"
+                            taskIndex={item.taskIndex}
+                            done={item.done}
+                            disabled={completionsTableMissing}
+                            overdue={item.overdue}
+                            label={item.label}
+                            meta={item.meta}
+                            sourceLabel={item.documentType}
+                            sourceHref={`/docs/${item.documentId}`}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                {visibleActionItems.length > 0 && (
+                  <section>
+                    <SectionHeader title="Action items" count={visibleActionItems.length} />
+                    <ul>
+                      {visibleActionItems.map((item) => (
+                        <li key={`${item.documentId}:${item.taskIndex}`}>
+                          <TaskRow
+                            documentId={item.documentId}
+                            kind="action_item"
+                            taskIndex={item.taskIndex}
+                            done={item.done}
+                            disabled={completionsTableMissing}
+                            overdue={false}
+                            label={item.label}
+                            sourceLabel={item.documentType}
+                            sourceHref={`/docs/${item.documentId}`}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+              </>
             )}
           </>
         )}

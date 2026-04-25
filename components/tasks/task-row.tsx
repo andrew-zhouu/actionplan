@@ -10,6 +10,7 @@ type Props = {
   taskIndex:   number;
   done:        boolean;
   disabled?:   boolean;
+  overdue?:    boolean;
   label:       string;
   meta?:       string;   // formatted date for deadlines
   sourceLabel: string;
@@ -22,6 +23,7 @@ export function TaskRow({
   taskIndex,
   done: initialDone,
   disabled = false,
+  overdue = false,
   label,
   meta,
   sourceLabel,
@@ -84,7 +86,13 @@ export function TaskRow({
         <div className="mt-0.5 flex items-center gap-2">
           {meta && (
             <>
-              <span className="font-mono text-[10.5px] text-zinc-400">{meta}</span>
+              <span
+                className={`font-mono text-[10.5px] ${
+                  overdue && !done ? "font-medium text-amber-600" : "text-zinc-400"
+                }`}
+              >
+                {meta}
+              </span>
               <span className="select-none text-zinc-300">·</span>
             </>
           )}
