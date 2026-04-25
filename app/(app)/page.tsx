@@ -1,20 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { desc } from "drizzle-orm";
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { Topbar } from "@/components/shell/topbar";
+import { InboxRow } from "@/components/inbox/inbox-row";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
-
-type ComplexityLevel = "Low" | "Medium" | "High";
-
-const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
-  Low:    "bg-green-100 text-green-800",
-  Medium: "bg-yellow-100 text-yellow-800",
-  High:   "bg-red-100 text-red-800",
-};
 
 function formatDate(date: Date): string {
   const now     = new Date();
@@ -120,56 +113,24 @@ export default async function InboxPage() {
           <EmptyInbox />
         ) : (
           <>
-            {/* list header */}
             <div className="border-b border-zinc-100 px-6 py-3">
               <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
                 {rows.length} {rows.length === 1 ? "document" : "documents"}
               </p>
             </div>
-
-            {/* rows */}
             <ul>
-              {rows.map((row) => {
-                const summary = getSummary(row.result);
-                const badgeClass =
-                  COMPLEXITY_COLORS[row.complexity as ComplexityLevel] ??
-                  "bg-zinc-100 text-zinc-500";
-
-                return (
-                  <li key={row.id}>
-                    <Link
-                      href={`/docs/${row.id}`}
-                      className="group flex gap-4 border-b border-zinc-100 px-6 py-4 transition-colors hover:bg-zinc-50 last:border-b-0"
-                    >
-                      {/* main content */}
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-1.5 flex items-center gap-2">
-                          <span
-                            className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}
-                          >
-                            {row.complexity}
-                          </span>
-                          <span className="truncate text-sm font-medium text-zinc-900 group-hover:text-zinc-700">
-                            {row.documentType}
-                          </span>
-                        </div>
-                        {summary && (
-                          <p className="text-[13px] leading-relaxed text-zinc-500 line-clamp-2">
-                            {summary}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* date */}
-                      <div className="shrink-0 pt-px">
-                        <span className="font-mono text-[10.5px] text-zinc-400">
-                          {formatDate(row.createdAt)}
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
+              {rows.map((row) => (
+                <li key={row.id}>
+                  <InboxRow
+                    id={row.id}
+                    href={`/docs/${row.id}`}
+                    documentType={row.documentType}
+                    complexity={row.complexity}
+                    formattedDate={formatDate(row.createdAt)}
+                    summary={getSummary(row.result)}
+                  />
+                </li>
+              ))}
             </ul>
           </>
         )}
