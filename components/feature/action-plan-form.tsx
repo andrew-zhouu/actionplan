@@ -33,7 +33,11 @@ const LOADING_MESSAGES = [
   "Generating questions to ask…",
 ];
 
-export function ActionPlanForm() {
+type Props = {
+  onSuccess?: (text: string, result: AnalysisResult) => void;
+};
+
+export function ActionPlanForm({ onSuccess }: Props = {}) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +70,11 @@ export function ActionPlanForm() {
         return;
       }
 
-      setResult(data as AnalysisResult);
+      if (onSuccess) {
+        onSuccess(text, data as AnalysisResult);
+      } else {
+        setResult(data as AnalysisResult);
+      }
     } catch {
       setError("Could not reach the server. Please check your connection.");
     } finally {
