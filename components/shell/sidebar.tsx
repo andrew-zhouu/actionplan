@@ -64,7 +64,7 @@ function IconPlus() {
 const NAV = [
   { key: "inbox",     label: "Inbox",     href: "/",   Icon: IconInbox },
   { key: "dashboard", label: "Dashboard", href: null,  Icon: IconGrid },
-  { key: "tasks",     label: "Tasks",     href: null,  Icon: IconCheck },
+  { key: "tasks",     label: "Tasks",     href: "/tasks",  Icon: IconCheck },
   { key: "calendar",  label: "Calendar",  href: null,  Icon: IconCalendar },
   { key: "library",   label: "Library",   href: null,  Icon: IconLibrary },
 ] as const;

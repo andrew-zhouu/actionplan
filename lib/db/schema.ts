@@ -8,3 +8,11 @@ export const documents = sqliteTable("documents", {
   sourceText:   text("source_text").notNull(),
   result:       text("result").notNull(), // JSON-serialised AnalysisResult
 });
+
+export const taskCompletions = sqliteTable("task_completions", {
+  id:          text("id").primaryKey(),
+  documentId:  text("document_id").notNull(),
+  kind:        text("kind").notNull(),    // "action_item" | "deadline"
+  taskIndex:   int("task_index").notNull(),
+  completedAt: int("completed_at", { mode: "timestamp" }).notNull(),
+});
