@@ -1,6 +1,8 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { analyzeDocument, ModelOutputError } from "@/lib/ai/analyze-document";
+import { db } from "@/lib/db";
+import { documents } from "@/lib/db/schema";
 
 const MIN_TEXT_LENGTH = 50;
 
@@ -33,7 +35,22 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await analyzeDocument(parsed.data.text);
-    return Response.json(result);
+
+    try {
+      const id = crypto.randomUUID();
+      await db.insert(documents).values({
+        id,
+        createdAt: new Date(),
+        documentType: result.documentType,
+        complexity: result.complexityLevel,
+        sourceText: parsed.data.text,
+        result: JSON.stringify(result),
+      });
+      return Response.json({ ...result, id });
+    } catch (dbErr) {
+      console.error("[/api/analyze] DB write failed, returning without id:", dbErr);
+      return Response.json(result);
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
