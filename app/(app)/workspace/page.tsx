@@ -46,7 +46,7 @@ export default function WorkspacePage() {
 
   return (
     <>
-      <Topbar crumbs={["Inbox", data.result.documentType]} />
+      <Topbar crumbs={[{ label: "Inbox", href: "/" }, data.result.documentType]} />
       <WorkspaceView
         text={data.text}
         result={data.result}

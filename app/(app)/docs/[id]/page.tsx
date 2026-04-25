@@ -24,7 +24,7 @@ export default async function DocPage({ params }: Props) {
 
   return (
     <>
-      <Topbar crumbs={["Inbox", result.documentType]} />
+      <Topbar crumbs={[{ label: "Inbox", href: "/" }, result.documentType]} />
       <DocWorkspace text={doc.sourceText} result={result} />
     </>
   );

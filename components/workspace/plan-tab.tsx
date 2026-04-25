@@ -5,7 +5,12 @@ import type { AnalysisResult } from "@/types/analysis";
 
 type Props = { result: AnalysisResult };
 
+function hasYear(str: string): boolean {
+  return /\b(19|20)\d{2}\b/.test(str);
+}
+
 function tryParseDate(str: string): Date | null {
+  if (!hasYear(str)) return null;
   const d = new Date(str);
   return isNaN(d.getTime()) ? null : d;
 }

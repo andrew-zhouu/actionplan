@@ -23,7 +23,7 @@ export default function NewDocumentPage() {
 
   return (
     <>
-      <Topbar crumbs={["Inbox", "New document"]} />
+      <Topbar crumbs={[{ label: "Inbox", href: "/" }, "New document"]} />
       <div className="flex-1 overflow-y-auto bg-zinc-50">
         <main className="mx-auto max-w-2xl px-6 py-12">
           <div className="mb-8">
