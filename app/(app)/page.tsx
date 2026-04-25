@@ -7,12 +7,18 @@ import { ActionPlanForm } from "@/components/feature/action-plan-form";
 
 const STORAGE_KEY = "actionplan:workspace";
 
+type AnalyzeResponse = AnalysisResult & { id?: string };
+
 export default function Home() {
   const router = useRouter();
 
-  function handleSuccess(text: string, result: AnalysisResult) {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ text, result }));
-    router.push("/workspace");
+  function handleSuccess(text: string, response: AnalyzeResponse) {
+    if (response.id) {
+      router.push(`/docs/${response.id}`);
+    } else {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ text, result: response }));
+      router.push("/workspace");
+    }
   }
 
   return (
