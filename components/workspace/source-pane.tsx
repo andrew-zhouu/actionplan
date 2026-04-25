@@ -50,7 +50,7 @@ export function SourcePane({ text, result, onReset }: Props) {
           onClick={onReset}
           className="shrink-0 text-[11px] font-medium text-zinc-400 transition-colors hover:text-zinc-700"
         >
-          ← New analysis
+          ← Inbox
         </button>
       </div>
 
