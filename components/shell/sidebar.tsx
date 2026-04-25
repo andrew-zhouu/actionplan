@@ -88,7 +88,7 @@ export function Sidebar() {
       {/* New document */}
       <div className="px-3 pb-3">
         <Link
-          href="/"
+          href="/new"
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
         >
           <IconPlus />
@@ -112,7 +112,7 @@ export function Sidebar() {
             );
           }
 
-          const isActive = pathname === href;
+          const isActive = pathname === href || (key === "inbox" && pathname === "/new");
           return (
             <Link
               key={key}
