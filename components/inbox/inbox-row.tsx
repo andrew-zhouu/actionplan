@@ -3,12 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteDocument } from "@/app/actions/docs";
-
-const COMPLEXITY_COLORS: Record<string, string> = {
-  Low:    "bg-green-100 text-green-800",
-  Medium: "bg-yellow-100 text-yellow-800",
-  High:   "bg-red-100 text-red-800",
-};
+import { COMPLEXITY_COLORS } from "@/lib/constants";
 
 type Props = {
   id:            string;

@@ -1,12 +1,7 @@
 "use client";
 
 import type { AnalysisResult } from "@/types/analysis";
-
-const COMPLEXITY_COLORS: Record<AnalysisResult["complexityLevel"], string> = {
-  Low:    "bg-green-100 text-green-800",
-  Medium: "bg-yellow-100 text-yellow-800",
-  High:   "bg-red-100 text-red-800",
-};
+import { COMPLEXITY_COLORS } from "@/lib/constants";
 
 function wordCount(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;

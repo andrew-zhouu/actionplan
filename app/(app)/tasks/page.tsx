@@ -6,25 +6,12 @@ import { db } from "@/lib/db";
 import { documents, taskCompletions } from "@/lib/db/schema";
 import { Topbar } from "@/components/shell/topbar";
 import { TaskRow } from "@/components/tasks/task-row";
+import { parseDate, formatDeadlineDate } from "@/lib/utils/dates";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function isTableMissing(err: unknown): boolean {
   return err instanceof Error && err.message.includes("no such table");
-}
-
-function hasYear(str: string): boolean {
-  return /\b(19|20)\d{2}\b/.test(str);
-}
-
-function parseDate(str: string | undefined): Date | null {
-  if (!str || !hasYear(str)) return null;
-  const d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function formatDate(d: Date): string {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 // ─── small ui pieces ─────────────────────────────────────────────────────────
@@ -180,7 +167,7 @@ export default async function TasksPage({ searchParams }: Props) {
         kind:         "deadline",
         taskIndex:    i,
         label:        d.description,
-        meta:         pd ? formatDate(pd) : d.date,
+        meta:         pd ? formatDeadlineDate(pd) : d.date,
         parsedDate:   pd ?? undefined,
         done,
         overdue:      !!pd && pd < now && !done,
