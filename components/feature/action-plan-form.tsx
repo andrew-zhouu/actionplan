@@ -306,6 +306,9 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
         </div>
       )}
 
+      {/* Inline fallback: only rendered when onSuccess is not provided
+          (e.g. standalone embedding or local development). In the main
+          app flow onSuccess is always passed, so this branch stays dormant. */}
       {result && <AnalysisResults result={result} />}
     </div>
   );

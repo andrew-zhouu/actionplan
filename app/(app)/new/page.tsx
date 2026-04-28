@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import type { AnalysisResult } from "@/types/analysis";
 import { Topbar } from "@/components/shell/topbar";
 import { ActionPlanForm } from "@/components/feature/action-plan-form";
-
-const STORAGE_KEY = "actionplan:workspace";
+import { STORAGE_KEY } from "@/lib/constants";
 
 type AnalyzeResponse = AnalysisResult & { id?: string };
 

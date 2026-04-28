@@ -2,18 +2,9 @@
 
 import { useState } from "react";
 import type { AnalysisResult } from "@/types/analysis";
+import { parseDate } from "@/lib/utils/dates";
 
 type Props = { result: AnalysisResult };
-
-function hasYear(str: string): boolean {
-  return /\b(19|20)\d{2}\b/.test(str);
-}
-
-function tryParseDate(str: string): Date | null {
-  if (!hasYear(str)) return null;
-  const d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
-}
 
 export function PlanTab({ result }: Props) {
   const [done, setDone] = useState<Set<number>>(new Set());
@@ -96,7 +87,7 @@ export function PlanTab({ result }: Props) {
           </h3>
           <ul className="space-y-4">
             {result.deadlines.map((deadline, i) => {
-              const parsed = deadline.date ? tryParseDate(deadline.date) : null;
+              const parsed = parseDate(deadline.date);
               return (
                 <li key={i} className="flex items-start gap-4">
                   {parsed ? (

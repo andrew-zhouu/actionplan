@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import type { AnalysisResult } from "@/types/analysis";
 import { Topbar } from "@/components/shell/topbar";
 import { WorkspaceView } from "@/components/workspace/workspace-view";
-
-const STORAGE_KEY = "actionplan:workspace";
+import { STORAGE_KEY } from "@/lib/constants";
 
 type WorkspaceData = { text: string; result: AnalysisResult };
 
