@@ -14,6 +14,27 @@ function isTableMissing(err: unknown): boolean {
   return err instanceof Error && err.message.includes("no such table");
 }
 
+/**
+ * Build a /tasks href that composes all active filter params correctly,
+ * so no filter ever clobbers another when toggled.
+ */
+function buildTasksHref({
+  type,
+  overdue,
+  show,
+}: {
+  type?:   string;
+  overdue: boolean;
+  show:    boolean;
+}): string {
+  const p = new URLSearchParams();
+  if (show)    p.set("show",    "all");
+  if (type)    p.set("type",    type);
+  if (overdue) p.set("overdue", "1");
+  const qs = p.toString();
+  return qs ? `/tasks?${qs}` : "/tasks";
+}
+
 // ─── small ui pieces ─────────────────────────────────────────────────────────
 
 function SchemaWarning() {
@@ -94,11 +115,13 @@ type TaskItem = {
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 
-type Props = { searchParams: Promise<{ show?: string }> };
+type Props = { searchParams: Promise<{ show?: string; type?: string; overdue?: string }> };
 
 export default async function TasksPage({ searchParams }: Props) {
-  const { show } = await searchParams;
+  const { show, type: typeParam, overdue: overdueParam } = await searchParams;
   const showCompleted = show === "all";
+  const typeFilter    = typeParam === "deadlines" || typeParam === "actions" ? typeParam : "";
+  const showOverdue   = overdueParam === "1";
 
   // 1. Fetch documents
   let docs: { id: string; documentType: string; result: string }[] = [];
@@ -167,7 +190,7 @@ export default async function TasksPage({ searchParams }: Props) {
         kind:         "deadline",
         taskIndex:    i,
         label:        d.description,
-        meta:         pd ? formatDeadlineDate(pd) : d.date,
+        meta:         d.date, // always display the original string; pd is for sort/overdue only
         parsedDate:   pd ?? undefined,
         done,
         overdue:      !!pd && pd < now && !done,
@@ -199,8 +222,20 @@ export default async function TasksPage({ searchParams }: Props) {
   const incompleteCount =
     deadlines.filter(t => !t.done).length + actionItems.filter(t => !t.done).length;
 
-  const visibleDeadlines   = showCompleted ? deadlines   : deadlines.filter(t => !t.done);
-  const visibleActionItems = showCompleted ? actionItems : actionItems.filter(t => !t.done);
+  // Step 1: show / hide completed
+  const afterCompleted_d = showCompleted ? deadlines   : deadlines.filter(t => !t.done);
+  const afterCompleted_a = showCompleted ? actionItems : actionItems.filter(t => !t.done);
+
+  // Step 2: overdue filter — applies only to deadlines; hides action items when on
+  const afterOverdue_d = showOverdue
+    ? afterCompleted_d.filter(t => !!t.parsedDate && t.parsedDate < now)
+    : afterCompleted_d;
+  const afterOverdue_a = showOverdue ? [] : afterCompleted_a;
+
+  // Step 3: type filter
+  const visibleDeadlines   = typeFilter === "actions"   ? [] : afterOverdue_d;
+  const visibleActionItems = typeFilter === "deadlines" ? [] : afterOverdue_a;
+
   const hasVisibleTask = visibleDeadlines.length > 0 || visibleActionItems.length > 0;
 
   return (
@@ -214,29 +249,72 @@ export default async function TasksPage({ searchParams }: Props) {
         ) : (
           <>
             {/* Controls bar */}
-            <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-3">
-              <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
-                {incompleteCount === 0
-                  ? "All complete"
-                  : `${incompleteCount} remaining`}
-              </p>
-              <Link
-                href={showCompleted ? "/tasks" : "/tasks?show=all"}
-                className="text-[11px] font-medium text-zinc-400 transition-colors hover:text-zinc-700"
-              >
-                {showCompleted ? "Hide completed" : "Show completed"}
-              </Link>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-zinc-100 px-6 py-3">
+
+              {/* Left: remaining count + type filter pills */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <p className="shrink-0 font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
+                  {incompleteCount === 0 ? "All complete" : `${incompleteCount} remaining`}
+                </p>
+                <div className="flex items-center gap-0.5">
+                  {(
+                    [
+                      { label: "All",       value: ""          },
+                      { label: "Deadlines", value: "deadlines" },
+                      { label: "Actions",   value: "actions"   },
+                    ] as const
+                  ).map(({ label, value }) => (
+                    <Link
+                      key={label}
+                      href={buildTasksHref({ type: value || undefined, overdue: showOverdue, show: showCompleted })}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                        typeFilter === value
+                          ? "bg-zinc-800 text-white"
+                          : "text-zinc-500 hover:text-zinc-800"
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: overdue toggle + completed toggle */}
+              <div className="flex shrink-0 items-center gap-4">
+                <Link
+                  href={buildTasksHref({ type: typeFilter || undefined, overdue: !showOverdue, show: showCompleted })}
+                  className={`text-[11px] font-medium transition-colors ${
+                    showOverdue
+                      ? "text-zinc-400 hover:text-zinc-700"
+                      : "text-red-500 hover:text-red-700"
+                  }`}
+                >
+                  {showOverdue ? "Show all" : "Overdue only"}
+                </Link>
+                <Link
+                  href={buildTasksHref({ type: typeFilter || undefined, overdue: showOverdue, show: !showCompleted })}
+                  className="text-[11px] font-medium text-zinc-400 transition-colors hover:text-zinc-700"
+                >
+                  {showCompleted ? "Hide completed" : "Show completed"}
+                </Link>
+              </div>
+
             </div>
 
             {!hasVisibleTask ? (
-              /* All tasks done and hide-completed is on */
               <div className="px-6 py-12 text-center">
-                <p className="text-sm text-zinc-400">
-                  All tasks complete.{" "}
-                  <Link href="/tasks?show=all" className="font-medium text-zinc-600 hover:text-zinc-900">
-                    Show completed →
-                  </Link>
-                </p>
+                {showOverdue ? (
+                  /* Overdue filter is on but nothing qualifies */
+                  <p className="text-sm text-zinc-400">No overdue tasks.</p>
+                ) : (
+                  /* All tasks done and hide-completed is on */
+                  <p className="text-sm text-zinc-400">
+                    All tasks complete.{" "}
+                    <Link href="/tasks?show=all" className="font-medium text-zinc-600 hover:text-zinc-900">
+                      Show completed →
+                    </Link>
+                  </p>
+                )}
               </div>
             ) : (
               <>
