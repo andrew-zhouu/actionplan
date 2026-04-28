@@ -1,11 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import { desc } from "drizzle-orm";
+import { Suspense } from "react";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { Topbar } from "@/components/shell/topbar";
 import { InboxRow } from "@/components/inbox/inbox-row";
+import { InboxFilters } from "@/components/inbox/inbox-filters";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -38,7 +40,7 @@ function getSummary(resultJson: string): string {
   }
 }
 
-// ─── empty state ────────────────────────────────────────────────────────────
+// ─── empty states ────────────────────────────────────────────────────────────
 
 function EmptyInbox() {
   return (
@@ -78,6 +80,9 @@ function EmptyInbox() {
 
 // ─── page ────────────────────────────────────────────────────────────────────
 
+const VALID_COMPLEXITIES = ["Low", "Medium", "High"] as const;
+type ComplexityFilter = (typeof VALID_COMPLEXITIES)[number];
+
 type Row = {
   id:           string;
   createdAt:    Date;
@@ -86,7 +91,25 @@ type Row = {
   result:       string;
 };
 
-export default async function InboxPage() {
+type ProcessedRow = Row & { summary: string };
+
+type Props = {
+  searchParams: Promise<{ q?: string; complexity?: string }>;
+};
+
+export default async function InboxPage({ searchParams }: Props) {
+  const { q: rawQ, complexity: rawComplexity } = await searchParams;
+
+  // Sanitise params — reject invalid complexity values entirely.
+  const q = rawQ?.trim().toLowerCase() ?? "";
+  const complexity: ComplexityFilter | "" = VALID_COMPLEXITIES.includes(
+    rawComplexity as ComplexityFilter,
+  )
+    ? (rawComplexity as ComplexityFilter)
+    : "";
+
+  const hasFilters = !!(q || complexity);
+
   let rows: Row[] = [];
 
   try {
@@ -99,41 +122,85 @@ export default async function InboxPage() {
         result:       documents.result,
       })
       .from(documents)
+      .where(complexity ? eq(documents.complexity, complexity) : undefined)
       .orderBy(desc(documents.createdAt))
       .limit(50);
   } catch {
-    // DB not yet initialised or unavailable — fall through to empty state
+    // DB not yet initialised or unavailable — fall through to empty state.
   }
+
+  // Post-fetch text filter: covers documentType and the extracted summary excerpt.
+  // Both fields are already in memory after the query, so no extra DB call is needed.
+  const processed: ProcessedRow[] = rows.map((row) => ({
+    ...row,
+    summary: getSummary(row.result),
+  }));
+
+  const filtered: ProcessedRow[] = q
+    ? processed.filter(
+        (r) =>
+          r.documentType.toLowerCase().includes(q) ||
+          r.summary.toLowerCase().includes(q),
+      )
+    : processed;
 
   return (
     <>
       <Topbar crumbs={["Inbox"]} />
       <div className="flex flex-1 flex-col overflow-y-auto bg-white">
-        {rows.length === 0 ? (
+
+        {/* True empty inbox — no documents exist and no filter is active */}
+        {rows.length === 0 && !hasFilters ? (
           <EmptyInbox />
         ) : (
           <>
-            <div className="border-b border-zinc-100 px-6 py-3">
-              <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
-                {rows.length} {rows.length === 1 ? "document" : "documents"}
+            {/* Filter bar — always visible once at least one document exists */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 px-6 py-3">
+              {/*
+               * InboxFilters uses useSearchParams(), which requires a Suspense
+               * boundary when rendered inside a server component (Next.js requirement).
+               */}
+              <Suspense fallback={null}>
+                <InboxFilters />
+              </Suspense>
+              <p className="shrink-0 font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
+                {filtered.length}{" "}
+                {filtered.length === 1 ? "document" : "documents"}
               </p>
             </div>
-            <ul>
-              {rows.map((row) => (
-                <li key={row.id}>
-                  <InboxRow
-                    id={row.id}
-                    href={`/docs/${row.id}`}
-                    documentType={row.documentType}
-                    complexity={row.complexity}
-                    formattedDate={formatDate(row.createdAt)}
-                    summary={getSummary(row.result)}
-                  />
-                </li>
-              ))}
-            </ul>
+
+            {/* Filtered empty — documents exist but nothing matches the current filter */}
+            {filtered.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm text-zinc-400">
+                  No documents match your search.{" "}
+                  <Link
+                    href="/"
+                    className="font-medium text-zinc-600 hover:text-zinc-900"
+                  >
+                    Clear filters →
+                  </Link>
+                </p>
+              </div>
+            ) : (
+              <ul>
+                {filtered.map((row) => (
+                  <li key={row.id}>
+                    <InboxRow
+                      id={row.id}
+                      href={`/docs/${row.id}`}
+                      documentType={row.documentType}
+                      complexity={row.complexity}
+                      formattedDate={formatDate(row.createdAt)}
+                      summary={row.summary}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
           </>
         )}
+
       </div>
     </>
   );

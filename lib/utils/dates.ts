@@ -14,8 +14,22 @@ export function hasYear(str: string): boolean {
  * - strings that don't parse to a valid date
  */
 export function parseDate(str: string | undefined): Date | null {
-  if (!str || !hasYear(str)) return null;
-  const d = new Date(str);
+  if (!str) return null;
+
+  // Strip ordinal suffixes before parsing so "7th", "1st", "2nd", "3rd" don't
+  // produce Invalid Date (e.g. "April 7th" → "April 7").
+  const normalized = str.replace(/(\d+)(st|nd|rd|th)\b/gi, "$1");
+
+  if (hasYear(normalized)) {
+    const d = new Date(normalized);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // No 4-digit year: append the current year before parsing.
+  // "April 7 2026" is unambiguous; avoids JS default-year behaviour
+  // (e.g. new Date("May 1") silently produces year 2001).
+  const withYear = `${normalized} ${new Date().getFullYear()}`;
+  const d = new Date(withYear);
   return isNaN(d.getTime()) ? null : d;
 }
 
