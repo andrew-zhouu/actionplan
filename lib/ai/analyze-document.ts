@@ -80,6 +80,49 @@ function extractJSON(raw: string): string {
   return trimmed;
 }
 
+/**
+ * Coerces common model-drift nulls before schema validation so a single
+ * null field does not kill the whole analysis response.
+ *
+ * Rules:
+ *   - String fields expected by the schema (documentType, summary) → ""
+ *   - Array fields (actionItems, risks, questionsToAsk, deadlines) → []
+ *   - Null elements inside those arrays are filtered out
+ *
+ * The schema itself stays strict — this normalization only covers the case
+ * where the model omits a field by returning null instead of the right type.
+ */
+function normalizeModelOutput(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const obj = { ...(raw as Record<string, unknown>) };
+
+  // Null string fields → ""
+  for (const field of ["documentType", "summary"] as const) {
+    if (obj[field] === null) {
+      console.warn(`[analyzeDocument] null coerced to "" for field "${field}"`);
+      obj[field] = "";
+    }
+  }
+
+  // Null array fields → []; null elements within arrays are filtered out
+  for (const field of ["actionItems", "risks", "questionsToAsk"] as const) {
+    if (obj[field] === null) {
+      console.warn(`[analyzeDocument] null coerced to [] for field "${field}"`);
+      obj[field] = [];
+    } else if (Array.isArray(obj[field])) {
+      obj[field] = (obj[field] as unknown[]).filter((el) => el !== null);
+    }
+  }
+  if (obj["deadlines"] === null) {
+    console.warn(`[analyzeDocument] null coerced to [] for field "deadlines"`);
+    obj["deadlines"] = [];
+  } else if (Array.isArray(obj["deadlines"])) {
+    obj["deadlines"] = (obj["deadlines"] as unknown[]).filter((el) => el !== null);
+  }
+
+  return obj;
+}
+
 export async function analyzeDocument(text: string): Promise<AnalysisResult> {
   // Step 1: Readability score and complexity level (deterministic)
   const { readabilityScore, complexityLevel } = computeReadability(text);
@@ -113,15 +156,29 @@ export async function analyzeDocument(text: string): Promise<AnalysisResult> {
     );
   }
 
-  // Step 7: Validate parsed output against schema
-  const validation = AIOutputSchema.safeParse(parsed);
+  // Step 7: Normalize null fields before validation to absorb common model drift
+  const normalized = normalizeModelOutput(parsed);
+
+  // Step 8: Validate against schema — surface field paths in the error for easier debugging
+  const validation = AIOutputSchema.safeParse(normalized);
   if (!validation.success) {
-    throw new ModelOutputError(
-      `Model output failed schema validation: ${validation.error.issues.map((i) => i.message).join(", ")}`
-    );
+    // Structured per-issue logging in development so the exact failing field is visible
+    if (process.env.NODE_ENV !== "production") {
+      for (const issue of validation.error.issues) {
+        console.error("[analyzeDocument] Validation issue:", {
+          path:    issue.path.length ? issue.path.join(".") : "(root)",
+          message: issue.message,
+          code:    issue.code,
+        });
+      }
+    }
+    const detail = validation.error.issues
+      .map((i) => `${i.path.length ? i.path.join(".") : "(root)"}: ${i.message}`)
+      .join("; ");
+    throw new ModelOutputError(`Model output failed schema validation: ${detail}`);
   }
 
-  // Step 8: Merge deterministic fields into final result
+  // Step 9: Merge deterministic fields into final result
   return {
     ...validation.data,
     readabilityScore,

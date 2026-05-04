@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { AnalysisResult } from "@/types/analysis";
 import { PlanTab } from "./plan-tab";
 import { RisksTab } from "./risks-tab";
@@ -12,7 +13,16 @@ type Tab = "plan" | "risks" | "questions";
 type Props = { result: AnalysisResult };
 
 export function PlanPanel({ result }: Props) {
-  const [tab, setTab] = useState<Tab>("plan");
+  const params = useSearchParams();
+
+  // Allow deep-links from the dashboard (e.g. ?tab=risks&risk=2) to open
+  // the correct tab and pass the highlight index to the target tab.
+  const urlTab     = params.get("tab");
+  const initialTab: Tab = (urlTab === "risks" || urlTab === "questions") ? urlTab : "plan";
+  const [tab, setTab] = useState<Tab>(initialTab);
+
+  const highlightRiskStr = params.get("risk");
+  const highlightRisk    = highlightRiskStr !== null ? parseInt(highlightRiskStr, 10) : undefined;
 
   const tabs: {
     key: Tab | "ask";
@@ -84,7 +94,7 @@ export function PlanPanel({ result }: Props) {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto">
         {tab === "plan"      && <PlanTab      result={result} />}
-        {tab === "risks"     && <RisksTab     result={result} />}
+        {tab === "risks"     && <RisksTab     result={result} highlightIndex={highlightRisk} />}
         {tab === "questions" && <QuestionsTab result={result} />}
       </div>
     </div>
