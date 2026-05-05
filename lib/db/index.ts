@@ -8,8 +8,8 @@ import path from "path";
 //   2. DATABASE_TURSO_DATABASE_URL  (Vercel Turso integration)
 //   3. local SQLite file fallback   (development)
 const url =
-  process.env.DATABASE_URL ??
-  process.env.DATABASE_TURSO_DATABASE_URL ??
+  process.env.DATABASE_URL ||
+  process.env.DATABASE_TURSO_DATABASE_URL ||
   `file:${path.join(process.cwd(), "db", "actionplan.db")}`;
 
 // Auth token resolution order:
@@ -17,7 +17,7 @@ const url =
 //   2. DATABASE_TURSO_AUTH_TOKEN    (Vercel Turso integration)
 //   undefined in local dev — fine for file:// connections
 const authToken =
-  process.env.DATABASE_AUTH_TOKEN ??
+  process.env.DATABASE_AUTH_TOKEN ||
   process.env.DATABASE_TURSO_AUTH_TOKEN;
 
 const client = createClient({ url, authToken });
