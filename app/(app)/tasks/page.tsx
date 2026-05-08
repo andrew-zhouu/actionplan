@@ -63,17 +63,16 @@ function SectionHeader({
   kind:  "deadline" | "action_item";
 }) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-zinc-100 bg-zinc-50 px-6 py-2.5">
-      {/* Colour dot connects section to row-level kind badges */}
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          kind === "deadline" ? "bg-amber-400" : "bg-zinc-400"
-        }`}
-      />
-      <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-500">
-        {title}
-        <span className="ml-2 font-normal text-zinc-400">{count}</span>
-      </p>
+    <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3.5">
+      <div className="flex items-center gap-2.5">
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            kind === "deadline" ? "bg-amber-400" : "bg-zinc-400"
+          }`}
+        />
+        <h2 className="text-[13px] font-semibold text-zinc-800">{title}</h2>
+      </div>
+      <span className="font-mono text-[11px] tabular-nums text-zinc-400">{count}</span>
     </div>
   );
 }
@@ -255,79 +254,79 @@ export default async function TasksPage({ searchParams }: Props) {
   return (
     <>
       <Topbar crumbs={["Tasks"]} />
-      <div className="flex flex-1 flex-col overflow-y-auto bg-white">
+
+      {/* bg-zinc-50 body — white section cards read as raised surfaces against it */}
+      <div className="flex flex-1 flex-col overflow-y-auto bg-zinc-50">
         {completionsTableMissing && <SchemaWarning />}
 
         {!hasAnyTask ? (
           <EmptyTasks />
         ) : (
           <>
-            {/* Controls bar */}
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-zinc-200 bg-white px-6 py-3">
+            {/* Controls bar — full-bleed with interior max-width for alignment */}
+            <div className="border-b border-zinc-200 bg-white">
+              <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-3">
 
-              {/* Left: remaining count + type filter pills */}
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                <p className="shrink-0 font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-500">
-                  {incompleteCount === 0 ? "All complete" : `${incompleteCount} remaining`}
-                </p>
-                <div className="flex items-center gap-1">
-                  {(
-                    [
-                      { label: "All",       value: ""          },
-                      { label: "Deadlines", value: "deadlines" },
-                      { label: "Actions",   value: "actions"   },
-                    ] as const
-                  ).map(({ label, value }) => (
-                    <Link
-                      key={label}
-                      href={buildTasksHref({ type: value || undefined, overdue: showOverdue, show: showCompleted })}
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                        typeFilter === value
-                          ? "bg-zinc-800 text-white"
-                          : "border border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
-                      }`}
-                    >
-                      {label}
-                    </Link>
-                  ))}
+                {/* Left: remaining count + type filter pills */}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                  <p className="shrink-0 font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-500">
+                    {incompleteCount === 0 ? "All complete" : `${incompleteCount} remaining`}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    {(
+                      [
+                        { label: "All",       value: ""          },
+                        { label: "Deadlines", value: "deadlines" },
+                        { label: "Actions",   value: "actions"   },
+                      ] as const
+                    ).map(({ label, value }) => (
+                      <Link
+                        key={label}
+                        href={buildTasksHref({ type: value || undefined, overdue: showOverdue, show: showCompleted })}
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                          typeFilter === value
+                            ? "bg-zinc-800 text-white"
+                            : "border border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
+                        }`}
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Right: overdue toggle + completed toggle — both styled as pill controls */}
-              <div className="flex shrink-0 items-center gap-2">
-                {/* Overdue: red pill when inactive (call to action), neutral when active */}
-                <Link
-                  href={buildTasksHref({ type: typeFilter || undefined, overdue: !showOverdue, show: showCompleted })}
-                  className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
-                    showOverdue
-                      ? "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
-                      : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                  }`}
-                >
-                  {showOverdue ? "Show all" : "Overdue only"}
-                </Link>
-                {/* Show/hide completed: dark filled when completed are visible */}
-                <Link
-                  href={buildTasksHref({ type: typeFilter || undefined, overdue: showOverdue, show: !showCompleted })}
-                  className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
-                    showCompleted
-                      ? "border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                      : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
-                  }`}
-                >
-                  {showCompleted ? "Hide completed" : "Show completed"}
-                </Link>
-              </div>
+                {/* Right: overdue toggle + completed toggle */}
+                <div className="flex shrink-0 items-center gap-2">
+                  <Link
+                    href={buildTasksHref({ type: typeFilter || undefined, overdue: !showOverdue, show: showCompleted })}
+                    className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                      showOverdue
+                        ? "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
+                        : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                    }`}
+                  >
+                    {showOverdue ? "Show all" : "Overdue only"}
+                  </Link>
+                  <Link
+                    href={buildTasksHref({ type: typeFilter || undefined, overdue: showOverdue, show: !showCompleted })}
+                    className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                      showCompleted
+                        ? "border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+                        : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
+                    }`}
+                  >
+                    {showCompleted ? "Hide completed" : "Show completed"}
+                  </Link>
+                </div>
 
+              </div>
             </div>
 
             {!hasVisibleTask ? (
-              <div className="px-6 py-12 text-center">
+              <div className="mx-auto max-w-3xl px-6 py-12 text-center">
                 {showOverdue ? (
-                  /* Overdue filter is on but nothing qualifies */
                   <p className="text-sm text-zinc-400">No overdue tasks.</p>
                 ) : (
-                  /* All tasks done and hide-completed is on */
                   <p className="text-sm text-zinc-400">
                     All tasks complete.{" "}
                     <Link href="/tasks?show=all" className="font-medium text-zinc-600 hover:text-zinc-900">
@@ -337,9 +336,12 @@ export default async function TasksPage({ searchParams }: Props) {
                 )}
               </div>
             ) : (
-              <>
+              /* Constrained width — gives rows a readable line length and anchors the layout */
+              <div className="mx-auto w-full max-w-3xl space-y-5 px-6 py-8">
+
                 {visibleDeadlines.length > 0 && (
-                  <section>
+                  /* Section card — each section is a contained module, not a flat list group */
+                  <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
                     <SectionHeader title="Deadlines" count={visibleDeadlines.length} kind="deadline" />
                     <ul>
                       {visibleDeadlines.map((item) => (
@@ -363,7 +365,7 @@ export default async function TasksPage({ searchParams }: Props) {
                 )}
 
                 {visibleActionItems.length > 0 && (
-                  <section>
+                  <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
                     <SectionHeader title="Action items" count={visibleActionItems.length} kind="action_item" />
                     <ul>
                       {visibleActionItems.map((item) => (
@@ -384,7 +386,8 @@ export default async function TasksPage({ searchParams }: Props) {
                     </ul>
                   </section>
                 )}
-              </>
+
+              </div>
             )}
           </>
         )}

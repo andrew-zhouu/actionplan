@@ -45,7 +45,7 @@ export function TaskRow({
 
   return (
     <div
-      className={`group relative flex items-start gap-3 border-b border-zinc-100 px-6 py-4 last:border-b-0 transition-colors hover:bg-zinc-50 ${
+      className={`group relative flex items-start gap-3 border-b border-zinc-100 px-5 py-4 last:border-b-0 transition-colors hover:bg-zinc-50 ${
         isPending ? "opacity-60" : ""
       }`}
     >
@@ -126,7 +126,7 @@ export function TaskRow({
                 className={`font-mono text-[10.5px] ${
                   overdue && !done
                     ? "font-semibold text-red-500"
-                    : "text-zinc-400"
+                    : "text-zinc-500"
                 }`}
               >
                 {meta}
@@ -138,7 +138,7 @@ export function TaskRow({
           <span className="select-none text-zinc-200">·</span>
           <Link
             href={sourceHref}
-            className="text-[11px] text-zinc-400 transition-colors hover:text-zinc-600"
+            className="text-[11px] text-zinc-500 transition-colors hover:text-zinc-700"
           >
             {sourceLabel} ↗
           </Link>
