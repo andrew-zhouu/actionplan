@@ -8,6 +8,7 @@ import { documents, taskCompletions } from "@/lib/db/schema";
 import type { AnalysisResult } from "@/types/analysis";
 import { Topbar } from "@/components/shell/topbar";
 import { TaskWorkspaceToggle } from "@/components/tasks/task-workspace-toggle";
+import { TaskBackButton } from "@/components/tasks/task-back-button";
 import { COMPLEXITY_COLORS } from "@/lib/constants";
 import { parseDate, formatDeadlineDate } from "@/lib/utils/dates";
 
@@ -152,7 +153,7 @@ export default async function TaskWorkspacePage({ params }: Props) {
     <>
       <Topbar
         crumbs={[
-          { label: "Inbox", href: "/" },
+          { label: "Tasks", href: "/tasks" },
           { label: doc.documentType, href: `/docs/${documentId}` },
           taskKind === "deadline" ? "Deadline" : "Action item",
         ]}
@@ -161,6 +162,9 @@ export default async function TaskWorkspacePage({ params }: Props) {
       <div className="flex-1 overflow-y-auto bg-zinc-50">
         <main className="mx-auto max-w-2xl px-6 py-10">
           <div className="space-y-5">
+
+            {/* ── Back navigation ──────────────────────────────────────── */}
+            <TaskBackButton />
 
             {/* ── Task header ──────────────────────────────────────────── */}
             <div
