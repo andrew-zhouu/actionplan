@@ -16,3 +16,12 @@ export const taskCompletions = sqliteTable("task_completions", {
   taskIndex:   int("task_index").notNull(),
   completedAt: int("completed_at", { mode: "timestamp" }).notNull(),
 });
+
+export const taskPlans = sqliteTable("task_plans", {
+  id:         text("id").primaryKey(),
+  documentId: text("document_id").notNull(),
+  kind:       text("kind").notNull(),      // "action_item" | "deadline"
+  taskIndex:  int("task_index").notNull(),
+  steps:      text("steps").notNull(),     // JSON-serialized string[]
+  createdAt:  int("created_at", { mode: "timestamp" }).notNull(),
+});
