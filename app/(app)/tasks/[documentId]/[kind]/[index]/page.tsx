@@ -4,15 +4,24 @@ import { notFound } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { documents, taskCompletions } from "@/lib/db/schema";
+import { documents, taskCompletions, taskPlans } from "@/lib/db/schema";
 import type { AnalysisResult } from "@/types/analysis";
 import { Topbar } from "@/components/shell/topbar";
 import { TaskWorkspaceToggle } from "@/components/tasks/task-workspace-toggle";
 import { TaskBackButton } from "@/components/tasks/task-back-button";
+import { TaskPlanSection } from "@/components/tasks/task-plan-section";
 import { COMPLEXITY_COLORS } from "@/lib/constants";
 import { parseDate, formatDeadlineDate } from "@/lib/utils/dates";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
+
+function isTableMissing(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.message.includes("no such table") ||
+      err.message.toLowerCase().includes("sqlite_error"))
+  );
+}
 
 const STOP_WORDS = new Set([
   "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
@@ -186,6 +195,36 @@ export default async function TaskWorkspacePage({ params }: Props) {
     )
     .limit(1);
   const isDone = completionRows.length > 0;
+
+  // ── Existing task plan ─────────────────────────────────────────────────────
+  let existingPlanSteps: string[] | null = null;
+  try {
+    const planRows = await db
+      .select()
+      .from(taskPlans)
+      .where(
+        and(
+          eq(taskPlans.documentId, documentId),
+          eq(taskPlans.kind, taskKind),
+          eq(taskPlans.taskIndex, taskIndex),
+        ),
+      )
+      .limit(1);
+
+    if (planRows.length > 0) {
+      const parsed = JSON.parse(planRows[0].steps);
+      if (Array.isArray(parsed)) {
+        existingPlanSteps = parsed.filter(
+          (s): s is string => typeof s === "string" && s.trim().length > 0,
+        );
+      }
+    }
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      console.error("[TaskWorkspacePage] Failed to load task plan:", err);
+    }
+    // Missing table is expected in dev — degrade silently
+  }
 
   // ── Due date parsing ───────────────────────────────────────────────────────
   const parsedDate = taskDate ? parseDate(taskDate) : null;
@@ -391,6 +430,24 @@ export default async function TaskWorkspacePage({ params }: Props) {
                 </Link>
               </div>
             </div>
+
+            {/* ── Action plan ───────────────────────────────────────────────
+                Generate and persist a 3–5 step plan for this task.
+                Gracefully degrades when task_plans table is missing. */}
+            <TaskPlanSection
+              documentId={documentId}
+              kind={taskKind}
+              taskIndex={taskIndex}
+              initialSteps={existingPlanSteps}
+              planContext={{
+                taskLabel:    taskLabel,
+                taskDate:     taskDate,
+                kind:         taskKind,
+                documentType: doc.documentType,
+                summary:      result.summary,
+                risks:        result.risks,
+              }}
+            />
 
             {/* ── Questions to consider ─────────────────────────────────────
                 Surfaced from the document analysis — useful when deciding
