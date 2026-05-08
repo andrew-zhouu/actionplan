@@ -56,6 +56,73 @@ function findRelatedRisk(taskLabel: string, risks: string[]): string | null {
   return bestScore >= 2 ? bestRisk : null;
 }
 
+/**
+ * Splits source text into candidate sentences.
+ * Keeps sentences between 30–350 chars to drop headers, list fragments,
+ * and paragraph-length walls of text.
+ */
+function extractSentences(text: string): string[] {
+  return text
+    .replace(/\r\n|\r/g, "\n")
+    .split(/(?<=[.!?])\s+/g)
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length >= 30 && s.length <= 350);
+}
+
+/**
+ * Finds up to `max` sentences from the source text that overlap with the
+ * task label's keywords. Returns an empty array when nothing scores above
+ * the threshold — the caller should omit the block in that case.
+ *
+ * Scoring:
+ *   +1 per keyword (≥ 4 chars, non-stop-word) found in the sentence
+ *   +2 if the sentence also contains the raw deadline date string
+ * Threshold: score ≥ 1 (more permissive than findRelatedRisk because source
+ * sentences are naturally on-topic; a single shared keyword is reliable here).
+ *
+ * Each returned sentence is truncated at 220 chars on a word boundary.
+ */
+function findEvidenceSentences(
+  taskLabel: string,
+  taskDate:  string | undefined,
+  sourceText: string,
+  max = 2,
+): string[] {
+  if (!sourceText.trim()) return [];
+
+  const sentences = extractSentences(sourceText);
+  if (sentences.length === 0) return [];
+
+  const keywords = taskLabel
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !STOP_WORDS.has(w));
+
+  if (keywords.length === 0) return [];
+
+  const dateLower = taskDate?.toLowerCase();
+
+  const scored = sentences
+    .map((sentence) => {
+      const lower = sentence.toLowerCase();
+      let score   = keywords.filter((w) => lower.includes(w)).length;
+      // Bonus for sentences that explicitly mention the deadline date
+      if (dateLower && lower.includes(dateLower)) score += 2;
+      return { sentence, score };
+    })
+    .filter((s) => s.score >= 1);
+
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, max).map(({ sentence }) => {
+    if (sentence.length <= 220) return sentence;
+    const cut       = sentence.slice(0, 220);
+    const lastSpace = cut.lastIndexOf(" ");
+    return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
+  });
+}
+
 // ─── page ─────────────────────────────────────────────────────────────────────
 
 type Props = {
@@ -127,6 +194,9 @@ export default async function TaskWorkspacePage({ params }: Props) {
 
   // ── Related risk — conservative keyword match ─────────────────────────────
   const relatedRisk = findRelatedRisk(taskLabel, result.risks);
+
+  // ── Evidence sentences — extracted from source text, score ≥ 1 ────────────
+  const evidenceSentences = findEvidenceSentences(taskLabel, taskDate, doc.sourceText);
 
   // ── Sibling tasks (same document, same kind, excluding current) ───────────
   const siblingDeadlines = taskKind === "deadline"
@@ -280,6 +350,23 @@ export default async function TaskWorkspacePage({ params }: Props) {
                     ? `This is a time-bound requirement in a ${doc.documentType}. Acting before the deadline is necessary to fulfill the document's conditions.`
                     : `This action item was identified as a required step in a ${doc.documentType}. Completing it is part of fulfilling the document's obligations.`}
                 </p>
+
+                {/* Source excerpt — sentences from the actual document that most
+                    closely match this task. Omitted when no sentence scores ≥ 1. */}
+                {evidenceSentences.length > 0 && (
+                  <div className="rounded-lg bg-zinc-50 px-4 py-3">
+                    <p className="mb-1.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-zinc-400">
+                      Source excerpt
+                    </p>
+                    <div className="space-y-2">
+                      {evidenceSentences.map((sentence, i) => (
+                        <p key={i} className="text-[12.5px] leading-relaxed text-zinc-600">
+                          &ldquo;{sentence}&rdquo;
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Related risk — only rendered when match confidence is sufficient */}
                 {relatedRisk && (
