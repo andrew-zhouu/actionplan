@@ -60,7 +60,7 @@ export function TaskPlanSection({
       </div>
 
       {/* Body */}
-      <div className="px-5 py-4">
+      <div className="px-5 py-5">
 
         {/* Empty state — prompt to generate */}
         {!steps && !isPending && (
