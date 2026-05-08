@@ -12,7 +12,7 @@ type Props = {
   disabled?:   boolean;
   overdue?:    boolean;
   label:       string;
-  meta?:       string;   // formatted date for deadlines
+  meta?:       string;   // original date string for deadlines
   sourceLabel: string;
   sourceHref:  string;
 };
@@ -41,24 +41,31 @@ export function TaskRow({
     });
   }
 
+  const workspaceHref = `/tasks/${documentId}/${kind}/${taskIndex}`;
+
   return (
     <div
-      className={`flex items-start gap-3 border-b border-zinc-100 px-6 py-3.5 last:border-b-0 transition-opacity ${
+      className={`group relative flex items-start gap-3 border-b border-zinc-100 px-6 py-4 last:border-b-0 transition-colors hover:bg-zinc-50 ${
         isPending ? "opacity-60" : ""
       }`}
     >
+      {/* Overdue left accent — gives urgency a row-level signal */}
+      {overdue && !done && (
+        <span className="absolute inset-y-0 left-0 w-[3px] rounded-r bg-red-400" />
+      )}
+
       {/* Checkbox */}
       <button
         type="button"
         onClick={handleToggle}
         disabled={disabled}
         aria-label={done ? "Mark incomplete" : "Mark complete"}
-        className={`mt-[3px] flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
           disabled
             ? "cursor-not-allowed border-zinc-200 bg-zinc-50"
             : done
             ? "border-zinc-700 bg-zinc-800"
-            : "border-zinc-300 hover:border-zinc-400"
+            : "border-zinc-300 hover:border-zinc-500"
         }`}
       >
         {done && (
@@ -76,29 +83,51 @@ export function TaskRow({
 
       {/* Content */}
       <div className="min-w-0 flex-1">
+        {/* Label — block link so the whole text area is the click target */}
         <Link
-          href={`/tasks/${documentId}/${kind}/${taskIndex}`}
-          className={`text-sm leading-relaxed transition-colors ${
+          href={workspaceHref}
+          className={`block text-[13.5px] font-medium leading-snug transition-colors ${
             done
               ? "text-zinc-400 line-through decoration-zinc-300"
-              : "text-zinc-700 hover:text-zinc-900"
+              : "text-zinc-800 group-hover:text-zinc-900"
           }`}
         >
           {label}
         </Link>
-        <div className="mt-0.5 flex items-center gap-2">
+
+        {/* Meta row: kind badge + date + source */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+          {/* Kind badge */}
+          <span
+            className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+              kind === "deadline"
+                ? overdue && !done
+                  ? "bg-red-50 text-red-600"
+                  : "bg-amber-50 text-amber-700"
+                : "bg-zinc-100 text-zinc-500"
+            }`}
+          >
+            {kind === "deadline" ? "Deadline" : "Action"}
+          </span>
+
+          {/* Date (deadlines only) */}
           {meta && (
             <>
+              <span className="select-none text-zinc-200">·</span>
               <span
                 className={`font-mono text-[10.5px] ${
-                  overdue && !done ? "font-medium text-amber-600" : "text-zinc-400"
+                  overdue && !done
+                    ? "font-semibold text-red-500"
+                    : "text-zinc-400"
                 }`}
               >
                 {meta}
               </span>
-              <span className="select-none text-zinc-300">·</span>
             </>
           )}
+
+          {/* Source document link */}
+          <span className="select-none text-zinc-200">·</span>
           <Link
             href={sourceHref}
             className="text-[11px] text-zinc-400 transition-colors hover:text-zinc-600"
@@ -106,6 +135,23 @@ export function TaskRow({
             {sourceLabel} ↗
           </Link>
         </div>
+      </div>
+
+      {/* Workspace affordance chevron — communicates that the row opens a workspace */}
+      <div className="flex shrink-0 items-center self-center pl-1">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-zinc-200 transition-colors group-hover:text-zinc-500"
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
       </div>
     </div>
   );
