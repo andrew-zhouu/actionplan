@@ -53,12 +53,26 @@ function SchemaWarning() {
   );
 }
 
-function SectionHeader({ title, count }: { title: string; count: number }) {
+function SectionHeader({
+  title,
+  count,
+  kind,
+}: {
+  title: string;
+  count: number;
+  kind:  "deadline" | "action_item";
+}) {
   return (
-    <div className="border-b border-zinc-100 bg-zinc-50/80 px-6 py-2.5">
-      <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
+    <div className="flex items-center gap-2.5 border-b border-zinc-100 bg-zinc-50 px-6 py-2.5">
+      {/* Colour dot connects section to row-level kind badges */}
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${
+          kind === "deadline" ? "bg-amber-400" : "bg-zinc-400"
+        }`}
+      />
+      <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-500">
         {title}
-        <span className="ml-2 text-zinc-300">{count}</span>
+        <span className="ml-2 font-normal text-zinc-400">{count}</span>
       </p>
     </div>
   );
@@ -249,14 +263,14 @@ export default async function TasksPage({ searchParams }: Props) {
         ) : (
           <>
             {/* Controls bar */}
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-zinc-100 px-6 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-zinc-200 bg-white px-6 py-3">
 
               {/* Left: remaining count + type filter pills */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <p className="shrink-0 font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                <p className="shrink-0 font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-500">
                   {incompleteCount === 0 ? "All complete" : `${incompleteCount} remaining`}
                 </p>
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-1">
                   {(
                     [
                       { label: "All",       value: ""          },
@@ -270,7 +284,7 @@ export default async function TasksPage({ searchParams }: Props) {
                       className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
                         typeFilter === value
                           ? "bg-zinc-800 text-white"
-                          : "text-zinc-500 hover:text-zinc-800"
+                          : "border border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
                       }`}
                     >
                       {label}
@@ -279,21 +293,27 @@ export default async function TasksPage({ searchParams }: Props) {
                 </div>
               </div>
 
-              {/* Right: overdue toggle + completed toggle */}
-              <div className="flex shrink-0 items-center gap-4">
+              {/* Right: overdue toggle + completed toggle — both styled as pill controls */}
+              <div className="flex shrink-0 items-center gap-2">
+                {/* Overdue: red pill when inactive (call to action), neutral when active */}
                 <Link
                   href={buildTasksHref({ type: typeFilter || undefined, overdue: !showOverdue, show: showCompleted })}
-                  className={`text-[11px] font-medium transition-colors ${
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
                     showOverdue
-                      ? "text-zinc-400 hover:text-zinc-700"
-                      : "text-red-500 hover:text-red-700"
+                      ? "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
+                      : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
                   }`}
                 >
                   {showOverdue ? "Show all" : "Overdue only"}
                 </Link>
+                {/* Show/hide completed: dark filled when completed are visible */}
                 <Link
                   href={buildTasksHref({ type: typeFilter || undefined, overdue: showOverdue, show: !showCompleted })}
-                  className="text-[11px] font-medium text-zinc-400 transition-colors hover:text-zinc-700"
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                    showCompleted
+                      ? "border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+                      : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
+                  }`}
                 >
                   {showCompleted ? "Hide completed" : "Show completed"}
                 </Link>
@@ -320,7 +340,7 @@ export default async function TasksPage({ searchParams }: Props) {
               <>
                 {visibleDeadlines.length > 0 && (
                   <section>
-                    <SectionHeader title="Deadlines" count={visibleDeadlines.length} />
+                    <SectionHeader title="Deadlines" count={visibleDeadlines.length} kind="deadline" />
                     <ul>
                       {visibleDeadlines.map((item) => (
                         <li key={`${item.documentId}:${item.taskIndex}`}>
@@ -344,7 +364,7 @@ export default async function TasksPage({ searchParams }: Props) {
 
                 {visibleActionItems.length > 0 && (
                   <section>
-                    <SectionHeader title="Action items" count={visibleActionItems.length} />
+                    <SectionHeader title="Action items" count={visibleActionItems.length} kind="action_item" />
                     <ul>
                       {visibleActionItems.map((item) => (
                         <li key={`${item.documentId}:${item.taskIndex}`}>
