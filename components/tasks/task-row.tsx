@@ -54,6 +54,14 @@ export function TaskRow({
         <span className="absolute inset-y-0 left-0 w-[3px] rounded-r bg-red-400" />
       )}
 
+      {/* Corner bracket affordance — appears on hover/focus to make the row
+          feel like a pressable work object. Four spans, each showing only the
+          two border sides that form that corner. */}
+      <span className="pointer-events-none absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-tl-sm border-l border-t border-zinc-200 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" />
+      <span className="pointer-events-none absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-tr-sm border-r border-t border-zinc-200 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" />
+      <span className="pointer-events-none absolute bottom-1.5 left-1.5 h-2.5 w-2.5 rounded-bl-sm border-b border-l border-zinc-200 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" />
+      <span className="pointer-events-none absolute bottom-1.5 right-1.5 h-2.5 w-2.5 rounded-br-sm border-b border-r border-zinc-200 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" />
+
       {/* Checkbox */}
       <button
         type="button"
