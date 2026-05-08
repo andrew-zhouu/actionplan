@@ -76,13 +76,16 @@ export function TaskRow({
 
       {/* Content */}
       <div className="min-w-0 flex-1">
-        <p
-          className={`text-sm leading-relaxed ${
-            done ? "text-zinc-400 line-through" : "text-zinc-700"
+        <Link
+          href={`/tasks/${documentId}/${kind}/${taskIndex}`}
+          className={`text-sm leading-relaxed transition-colors ${
+            done
+              ? "text-zinc-400 line-through decoration-zinc-300"
+              : "text-zinc-700 hover:text-zinc-900"
           }`}
         >
           {label}
-        </p>
+        </Link>
         <div className="mt-0.5 flex items-center gap-2">
           {meta && (
             <>
