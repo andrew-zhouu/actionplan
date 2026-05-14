@@ -11,6 +11,7 @@ import { TaskWorkspaceToggle } from "@/components/tasks/task-workspace-toggle";
 import { TaskBackButton } from "@/components/tasks/task-back-button";
 import { TaskPlanSection } from "@/components/tasks/task-plan-section";
 import { TaskDraftSection } from "@/components/tasks/task-draft-section";
+import type { PlanStep } from "@/app/actions/task-plans";
 import type { TaskDraft } from "@/app/actions/task-drafts";
 import { COMPLEXITY_COLORS } from "@/lib/constants";
 import { parseDate, formatDeadlineDate } from "@/lib/utils/dates";
@@ -199,7 +200,10 @@ export default async function TaskWorkspacePage({ params }: Props) {
   const isDone = completionRows.length > 0;
 
   // ── Existing task plan ─────────────────────────────────────────────────────
-  let existingPlanSteps: string[] | null = null;
+  // Accepts both legacy `string[]` payloads and new `PlanStep[]` shape so
+  // older rows continue rendering without a migration. Anything not coercible
+  // is dropped silently.
+  let existingPlanSteps: PlanStep[] | null = null;
   try {
     const planRows = await db
       .select()
@@ -216,9 +220,24 @@ export default async function TaskWorkspacePage({ params }: Props) {
     if (planRows.length > 0) {
       const parsed = JSON.parse(planRows[0].steps);
       if (Array.isArray(parsed)) {
-        existingPlanSteps = parsed.filter(
-          (s): s is string => typeof s === "string" && s.trim().length > 0,
-        );
+        const normalized: PlanStep[] = [];
+        for (const item of parsed) {
+          if (typeof item === "string") {
+            const title = item.trim();
+            if (title) normalized.push({ title, detail: "", needsDraft: false });
+          } else if (typeof item === "object" && item !== null) {
+            const obj   = item as Record<string, unknown>;
+            const title = typeof obj.title === "string" ? obj.title.trim() : "";
+            if (title) {
+              normalized.push({
+                title,
+                detail:     typeof obj.detail === "string" ? obj.detail.trim() : "",
+                needsDraft: obj.needsDraft === true,
+              });
+            }
+          }
+        }
+        if (normalized.length > 0) existingPlanSteps = normalized;
       }
     }
   } catch (err) {
