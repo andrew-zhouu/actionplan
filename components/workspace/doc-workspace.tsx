@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { AnalysisResult } from "@/types/analysis";
 import { WorkspaceView } from "./workspace-view";
@@ -7,9 +8,11 @@ import { WorkspaceView } from "./workspace-view";
 type Props = {
   text: string;
   result: AnalysisResult;
+  /** Server-rendered "Next step" module placed inside PlanPanel's header area. */
+  startHereSlot?: ReactNode;
 };
 
-export function DocWorkspace({ text, result }: Props) {
+export function DocWorkspace({ text, result, startHereSlot }: Props) {
   const router = useRouter();
 
   function handleReset() {
@@ -22,5 +25,12 @@ export function DocWorkspace({ text, result }: Props) {
     }
   }
 
-  return <WorkspaceView text={text} result={result} onReset={handleReset} />;
+  return (
+    <WorkspaceView
+      text={text}
+      result={result}
+      onReset={handleReset}
+      startHereSlot={startHereSlot}
+    />
+  );
 }

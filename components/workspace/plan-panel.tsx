@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import type { AnalysisResult } from "@/types/analysis";
 import { PlanTab } from "./plan-tab";
@@ -10,9 +10,13 @@ import { COMPLEXITY_COLORS } from "@/lib/constants";
 
 type Tab = "plan" | "risks" | "questions";
 
-type Props = { result: AnalysisResult };
+type Props = {
+  result: AnalysisResult;
+  /** Optional "Next step" module rendered between the summary and the tab bar. */
+  startHereSlot?: ReactNode;
+};
 
-export function PlanPanel({ result }: Props) {
+export function PlanPanel({ result, startHereSlot }: Props) {
   const params = useSearchParams();
 
   // Allow deep-links from the dashboard (e.g. ?tab=risks&risk=2) to open
@@ -54,6 +58,14 @@ export function PlanPanel({ result }: Props) {
         </div>
         <p className="text-sm leading-relaxed text-zinc-600">{result.summary}</p>
       </div>
+
+      {/* Next step module — bridges the summary into action. Rendered only when
+          the server passes a slot (skipped when the doc has zero tasks). */}
+      {startHereSlot && (
+        <div className="shrink-0 border-b border-zinc-100 px-6 py-3.5">
+          {startHereSlot}
+        </div>
+      )}
 
       {/* Tab bar */}
       <div className="flex shrink-0 border-b border-zinc-200 px-2">
