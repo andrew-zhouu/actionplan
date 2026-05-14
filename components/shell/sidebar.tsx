@@ -65,7 +65,7 @@ const NAV = [
   { key: "inbox",     label: "Inbox",     href: "/",   Icon: IconInbox },
   { key: "dashboard", label: "Dashboard", href: "/dashboard",  Icon: IconGrid },
   { key: "tasks",     label: "Tasks",     href: "/tasks",  Icon: IconCheck },
-  { key: "calendar",  label: "Calendar",  href: null,  Icon: IconCalendar },
+  { key: "calendar",  label: "Calendar",  href: "/calendar",  Icon: IconCalendar },
   { key: "library",   label: "Library",   href: null,  Icon: IconLibrary },
 ] as const;
 

@@ -33,4 +33,7 @@ export async function toggleTaskCompletion(
   revalidatePath("/tasks");
   // Keep the Start Here card on /docs/[id] in sync with completion state
   revalidatePath(`/docs/${documentId}`);
+  // Keep the day-cell indicators on /calendar in sync (all-done check,
+  // overdue red dot, count) — calendar reads from the same taskCompletions.
+  revalidatePath("/calendar");
 }
