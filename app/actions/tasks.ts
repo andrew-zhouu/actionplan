@@ -31,4 +31,6 @@ export async function toggleTaskCompletion(
     });
   }
   revalidatePath("/tasks");
+  // Keep the Start Here card on /docs/[id] in sync with completion state
+  revalidatePath(`/docs/${documentId}`);
 }
