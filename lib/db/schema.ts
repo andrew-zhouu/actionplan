@@ -25,3 +25,16 @@ export const taskPlans = sqliteTable("task_plans", {
   steps:      text("steps").notNull(),     // JSON-serialized string[]
   createdAt:  int("created_at", { mode: "timestamp" }).notNull(),
 });
+
+export const taskDrafts = sqliteTable("task_drafts", {
+  id:         text("id").primaryKey(),
+  documentId: text("document_id").notNull(),
+  kind:       text("kind").notNull(),                                   // "action_item" | "deadline"
+  taskIndex:  int("task_index").notNull(),
+  draftType:  text("draft_type").notNull(),                             // "email" | "letter" | "note"
+  subject:    text("subject"),                                          // populated only for emails
+  body:       text("body").notNull(),
+  approved:   int("approved", { mode: "boolean" }).notNull().default(false),
+  createdAt:  int("created_at", { mode: "timestamp" }).notNull(),
+  approvedAt: int("approved_at", { mode: "timestamp" }),                // null until approved
+});
