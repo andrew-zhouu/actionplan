@@ -205,8 +205,9 @@ export async function approveTaskDraft(
   documentId: string,
   kind:        "action_item" | "deadline",
   taskIndex:   number,
-): Promise<{ approvedAt: string }> {
+): Promise<{ approvedAt: string; persisted: boolean }> {
   const now = new Date();
+  let persisted = false;
   try {
     await db
       .update(taskDrafts)
@@ -218,6 +219,7 @@ export async function approveTaskDraft(
           eq(taskDrafts.taskIndex, taskIndex),
         ),
       );
+    persisted = true;
   } catch (err) {
     if (!isTableMissing(err)) {
       console.error("[approveTaskDraft] Failed to update draft:", err);
@@ -228,5 +230,123 @@ export async function approveTaskDraft(
 
   revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
 
-  return { approvedAt: now.toISOString() };
+  return { approvedAt: now.toISOString(), persisted };
+}
+
+// ─── unapprove ────────────────────────────────────────────────────────────────
+//
+// Inverse of approveTaskDraft — preserves content, flips approval flags back.
+// One-click action (no confirmation): the draft just returns to pending review.
+
+export async function unapproveTaskDraft(
+  documentId: string,
+  kind:        "action_item" | "deadline",
+  taskIndex:   number,
+): Promise<{ persisted: boolean }> {
+  let persisted = false;
+  try {
+    await db
+      .update(taskDrafts)
+      .set({ approved: false, approvedAt: null })
+      .where(
+        and(
+          eq(taskDrafts.documentId, documentId),
+          eq(taskDrafts.kind, kind),
+          eq(taskDrafts.taskIndex, taskIndex),
+        ),
+      );
+    persisted = true;
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      console.error("[unapproveTaskDraft] Failed to update draft:", err);
+      throw new Error("Failed to unapprove draft");
+    }
+    // Missing table: state change is in-memory only this session
+  }
+
+  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+
+  return { persisted };
+}
+
+// ─── save edits ───────────────────────────────────────────────────────────────
+//
+// Persists user-edited subject/body. Always resets approval to false because
+// approval is a statement about a specific text — editing invalidates it.
+
+export async function saveTaskDraftEdits(
+  documentId: string,
+  kind:        "action_item" | "deadline",
+  taskIndex:   number,
+  edits:       { subject: string | null; body: string },
+): Promise<{ persisted: boolean }> {
+  if (typeof edits.body !== "string" || edits.body.trim().length === 0) {
+    throw new Error("Draft body cannot be empty");
+  }
+
+  const body    = edits.body.trim().slice(0, 8000);
+  const subject = edits.subject !== null
+    ? edits.subject.trim().slice(0, 200) || null
+    : null;
+
+  let persisted = false;
+  try {
+    await db
+      .update(taskDrafts)
+      .set({
+        subject,
+        body,
+        approved:   false,
+        approvedAt: null,
+      })
+      .where(
+        and(
+          eq(taskDrafts.documentId, documentId),
+          eq(taskDrafts.kind, kind),
+          eq(taskDrafts.taskIndex, taskIndex),
+        ),
+      );
+    persisted = true;
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      console.error("[saveTaskDraftEdits] Failed to save:", err);
+      throw new Error("Failed to save changes");
+    }
+    // Missing table: edits stay in-memory only this session
+  }
+
+  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+
+  return { persisted };
+}
+
+// ─── discard ──────────────────────────────────────────────────────────────────
+//
+// Removes the row entirely. Missing-table case is a silent success since
+// there's nothing to remove.
+
+export async function discardTaskDraft(
+  documentId: string,
+  kind:        "action_item" | "deadline",
+  taskIndex:   number,
+): Promise<void> {
+  try {
+    await db
+      .delete(taskDrafts)
+      .where(
+        and(
+          eq(taskDrafts.documentId, documentId),
+          eq(taskDrafts.kind, kind),
+          eq(taskDrafts.taskIndex, taskIndex),
+        ),
+      );
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      console.error("[discardTaskDraft] Failed to delete:", err);
+      throw new Error("Failed to discard draft");
+    }
+    // Missing table: nothing to delete, succeed silently
+  }
+
+  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
 }
