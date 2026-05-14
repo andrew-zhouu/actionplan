@@ -4,12 +4,14 @@ import { notFound } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { documents, taskCompletions, taskPlans } from "@/lib/db/schema";
+import { documents, taskCompletions, taskPlans, taskDrafts } from "@/lib/db/schema";
 import type { AnalysisResult } from "@/types/analysis";
 import { Topbar } from "@/components/shell/topbar";
 import { TaskWorkspaceToggle } from "@/components/tasks/task-workspace-toggle";
 import { TaskBackButton } from "@/components/tasks/task-back-button";
 import { TaskPlanSection } from "@/components/tasks/task-plan-section";
+import { TaskDraftSection } from "@/components/tasks/task-draft-section";
+import type { TaskDraft } from "@/app/actions/task-drafts";
 import { COMPLEXITY_COLORS } from "@/lib/constants";
 import { parseDate, formatDeadlineDate } from "@/lib/utils/dates";
 
@@ -222,6 +224,41 @@ export default async function TaskWorkspacePage({ params }: Props) {
   } catch (err) {
     if (!isTableMissing(err)) {
       console.error("[TaskWorkspacePage] Failed to load task plan:", err);
+    }
+    // Missing table is expected in dev — degrade silently
+  }
+
+  // ── Existing task draft ───────────────────────────────────────────────────
+  let existingDraft: TaskDraft | null = null;
+  try {
+    const draftRows = await db
+      .select()
+      .from(taskDrafts)
+      .where(
+        and(
+          eq(taskDrafts.documentId, documentId),
+          eq(taskDrafts.kind, taskKind),
+          eq(taskDrafts.taskIndex, taskIndex),
+        ),
+      )
+      .limit(1);
+
+    if (draftRows.length > 0) {
+      const row = draftRows[0];
+      // Validate draftType — defends against schema drift / hand-written rows
+      if (row.draftType === "email" || row.draftType === "letter" || row.draftType === "note") {
+        existingDraft = {
+          draftType:  row.draftType,
+          subject:    row.subject,
+          body:       row.body,
+          approved:   row.approved,
+          approvedAt: row.approvedAt ? row.approvedAt.toISOString() : null,
+        };
+      }
+    }
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      console.error("[TaskWorkspacePage] Failed to load task draft:", err);
     }
     // Missing table is expected in dev — degrade silently
   }
@@ -440,6 +477,26 @@ export default async function TaskWorkspacePage({ params }: Props) {
               taskIndex={taskIndex}
               initialSteps={existingPlanSteps}
               planContext={{
+                taskLabel:    taskLabel,
+                taskDate:     taskDate,
+                kind:         taskKind,
+                documentType: doc.documentType,
+                summary:      result.summary,
+                risks:        result.risks,
+              }}
+            />
+
+            {/* ── Draft (human-approved) ───────────────────────────────────
+                Generate an email/letter/note artifact grounded in task context.
+                Generation always produces a pending draft; the user must
+                explicitly approve. Regeneration replaces the draft and resets
+                approval. Gracefully degrades when task_drafts table is missing. */}
+            <TaskDraftSection
+              documentId={documentId}
+              kind={taskKind}
+              taskIndex={taskIndex}
+              initialDraft={existingDraft}
+              draftContext={{
                 taskLabel:    taskLabel,
                 taskDate:     taskDate,
                 kind:         taskKind,
