@@ -1,12 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import { desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { documents, taskCompletions } from "@/lib/db/schema";
 import { Topbar } from "@/components/shell/topbar";
 import { COMPLEXITY_COLORS } from "@/lib/constants";
 import { parseDate } from "@/lib/utils/dates";
+import { getSession } from "@/lib/auth/session";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -251,18 +252,27 @@ export default async function DashboardPage() {
   let rawDocs: RawDoc[] = [];
   let fetchError = false;
 
+  // Scope to the signed-in user
+  const session = await getSession();
+  const userId  = session?.userId;
+
   try {
-    rawDocs = await db
-      .select({
-        id:           documents.id,
-        createdAt:    documents.createdAt,
-        documentType: documents.documentType,
-        complexity:   documents.complexity,
-        result:       documents.result,
-      })
-      .from(documents)
-      .orderBy(desc(documents.createdAt))
-      .limit(50);
+    if (userId) {
+      rawDocs = await db
+        .select({
+          id:           documents.id,
+          createdAt:    documents.createdAt,
+          documentType: documents.documentType,
+          complexity:   documents.complexity,
+          result:       documents.result,
+        })
+        .from(documents)
+        // Only complete docs — dashboard parses result for risks, deadlines,
+        // etc. and would crash on the "{}" placeholder.
+        .where(and(eq(documents.userId, userId), eq(documents.status, "complete")))
+        .orderBy(desc(documents.createdAt))
+        .limit(50);
+    }
   } catch (err) {
     if (!isTableMissing(err)) fetchError = true;
   }

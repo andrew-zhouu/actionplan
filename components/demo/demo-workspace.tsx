@@ -85,7 +85,7 @@ export function DemoWorkspace({
           </p>
         </div>
         <Link
-          href="/app/new"
+          href="/early-access?next=/app/new"
           className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-zinc-900 px-3 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-zinc-700"
         >
           Try with your document

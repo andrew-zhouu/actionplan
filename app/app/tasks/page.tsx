@@ -1,12 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import { desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { documents, taskCompletions } from "@/lib/db/schema";
 import { Topbar } from "@/components/shell/topbar";
 import { TaskRow } from "@/components/tasks/task-row";
 import { parseDate, formatDeadlineDate } from "@/lib/utils/dates";
+import { getSession } from "@/lib/auth/session";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -136,14 +137,23 @@ export default async function TasksPage({ searchParams }: Props) {
   const typeFilter    = typeParam === "deadlines" || typeParam === "actions" ? typeParam : "";
   const showOverdue   = overdueParam === "1";
 
-  // 1. Fetch documents
+  // Scope to the signed-in user
+  const session = await getSession();
+  const userId  = session?.userId;
+
+  // 1. Fetch documents owned by this user
   let docs: { id: string; documentType: string; result: string }[] = [];
   try {
-    docs = await db
-      .select({ id: documents.id, documentType: documents.documentType, result: documents.result })
-      .from(documents)
-      .orderBy(desc(documents.createdAt))
-      .limit(50);
+    if (userId) {
+      docs = await db
+        .select({ id: documents.id, documentType: documents.documentType, result: documents.result })
+        .from(documents)
+        // Only complete docs — processing/failed rows have placeholder
+        // result="{}" and would break the JSON parse below.
+        .where(and(eq(documents.userId, userId), eq(documents.status, "complete")))
+        .orderBy(desc(documents.createdAt))
+        .limit(50);
+    }
   } catch (err) {
     return (
       <>

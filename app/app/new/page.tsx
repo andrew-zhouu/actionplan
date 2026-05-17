@@ -1,23 +1,61 @@
-"use client";
+export const dynamic = "force-dynamic";
 
-import { useRouter } from "next/navigation";
-import type { AnalysisResult } from "@/types/analysis";
+import { redirect } from "next/navigation";
+import { desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { documents } from "@/lib/db/schema";
 import { Topbar } from "@/components/shell/topbar";
-import { ActionPlanForm } from "@/components/feature/action-plan-form";
-import { STORAGE_KEY } from "@/lib/constants";
+import { getSession } from "@/lib/auth/session";
+import { loadTrialUser } from "@/lib/auth/trial";
+import { NewDocumentClient } from "@/components/feature/new-document-client";
+import {
+  NewDocumentState,
+  type NewDocumentStateProps,
+} from "@/components/feature/new-document-state";
 
-type AnalyzeResponse = AnalysisResult & { id?: string };
+const READY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
-export default function NewDocumentPage() {
-  const router = useRouter();
+export default async function NewDocumentPage() {
+  // Middleware guarantees a session for /app/*, but bail to early-access
+  // defensively if the cookie is invalid between middleware and render.
+  const session = await getSession();
+  if (!session) redirect("/early-access?next=/app/new");
 
-  function handleSuccess(text: string, response: AnalyzeResponse) {
-    if (response.id) {
-      router.push(`/app/docs/${response.id}`);
-    } else {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ text, result: response }));
-      router.push("/app/workspace");
+  const user  = await loadTrialUser(session.userId);
+  const usage = user
+    ? { documentsUsed: user.documentsUsed, documentLimit: user.documentLimit }
+    : null;
+
+  // ── Derive top-of-page state from the user's most recent document ───────
+  // We render at most one state card. Processing always shows. Recently
+  // complete (≤ 1h) shows. Failed (≤ 1h) shows. Otherwise idle (no card).
+  let recentState: NewDocumentStateProps | null = null;
+  try {
+    const latest = await db
+      .select({
+        id:           documents.id,
+        status:       documents.status,
+        documentType: documents.documentType,
+        createdAt:    documents.createdAt,
+      })
+      .from(documents)
+      .where(eq(documents.userId, session.userId))
+      .orderBy(desc(documents.createdAt))
+      .limit(1);
+
+    const row = latest[0];
+    if (row) {
+      const ageMs = Date.now() - row.createdAt.getTime();
+      if (row.status === "processing") {
+        recentState = { kind: "processing", id: row.id };
+      } else if (row.status === "complete" && ageMs <= READY_WINDOW_MS) {
+        recentState = { kind: "ready", id: row.id, documentType: row.documentType };
+      } else if (row.status === "failed" && ageMs <= READY_WINDOW_MS) {
+        recentState = { kind: "failed", id: row.id };
+      }
     }
+  } catch {
+    // DB not yet initialised or transient error — skip the state card
   }
 
   return (
@@ -38,7 +76,10 @@ export default function NewDocumentPage() {
               could trip you up.
             </p>
           </div>
-          <ActionPlanForm onSuccess={handleSuccess} />
+
+          {recentState && <NewDocumentState {...recentState} />}
+
+          <NewDocumentClient usage={usage} />
         </main>
       </div>
     </>

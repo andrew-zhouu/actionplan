@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { AnalysisResult } from "@/types/analysis";
-import { AnalysisResults } from "./analysis-results";
+import Link from "next/link";
 
-const MIN_LENGTH    = 50;
-const MAX_LENGTH    = 12_000;
+const MIN_LENGTH     = 50;
+const MAX_LENGTH     = 12_000;
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 const SAMPLE_TEXT = `Dear Alex Chen,
@@ -26,39 +25,124 @@ Sincerely,
 Dr. Miriam Okafor
 Executive Director, Rhodes Foundation`;
 
-const LOADING_MESSAGES = [
-  "Analyzing document…",
-  "Extracting action items…",
-  "Identifying deadlines…",
-  "Reviewing risks and fine print…",
-  "Generating questions to ask…",
-];
+// ─── helpers ───────────────────────────────────────────────────────────────
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024)             return `${bytes} B`;
-  if (bytes < 1024 * 1024)     return `${(bytes / 1024).toFixed(0)} KB`;
+  if (bytes < 1024)        return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+type Usage         = { documentsUsed: number; documentLimit: number };
+type LimitReached  = { documentsUsed: number; documentLimit: number };
+type AnalyzeStart  = { id: string };
+
 type Props = {
-  onSuccess?: (text: string, result: AnalysisResult) => void;
+  onSuccess?: (response: AnalyzeStart) => void;
+  usage?:    Usage | null;
 };
 
-export function ActionPlanForm({ onSuccess }: Props = {}) {
-  const [text, setText]                       = useState("");
-  const [file, setFile]                       = useState<File | null>(null);
-  const [loading, setLoading]                 = useState(false);
-  const [error, setError]                     = useState<string | null>(null);
-  const [result, setResult]                   = useState<AnalysisResult | null>(null);
-  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
-  const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
+  const [text, setText]             = useState("");
+  const [file, setFile]             = useState<File | null>(null);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState<string | null>(null);
+  const [limitState, setLimitState] = useState<LimitReached | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Belt-and-suspenders double-submit guard. The Analyze button is also
+  // `disabled` while `loading` is true, but React state updates batch —
+  // the ref check at the top of handleSubmit prevents any race during
+  // the click → loading=true → disabled-render window.
+  const submittingRef = useRef(false);
+
+  // ── derived limit state ────────────────────────────────────────────────
+  const usageAtLimit  = usage !== null && usage.documentsUsed >= usage.documentLimit;
+  const showingLimit  = limitState !== null || usageAtLimit;
+  const effectiveLimit: LimitReached | null =
+    limitState ?? (usageAtLimit ? usage! : null);
+
+  // ── shared API error handling ─────────────────────────────────────────
+
+  type ApiError = { error?: unknown; message?: unknown; documentsUsed?: unknown; documentLimit?: unknown };
+
+  function handleApiError(data: ApiError) {
+    if (data.error === "limit_reached") {
+      setLimitState({
+        documentsUsed: typeof data.documentsUsed === "number" ? data.documentsUsed : 0,
+        documentLimit: typeof data.documentLimit === "number" ? data.documentLimit : 0,
+      });
+      return;
+    }
+    const friendly =
+      typeof data.message === "string" ? data.message :
+      typeof data.error   === "string" ? data.error   :
+      "Something went wrong. Please try again.";
+    setError(friendly);
+  }
+
+  // ── analyze pipelines (insert + after() — server returns { id } fast) ──
+
+  async function analyzeText(textToAnalyze: string) {
+    setError(null);
+    setLimitState(null);
+    setLoading(true);
+    try {
+      const response = await fetch("/api/analyze", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ text: textToAnalyze }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        handleApiError(data);
+        return;
+      }
+      if (typeof data?.id !== "string") {
+        setError("Unexpected response from the server. Please try again.");
+        return;
+      }
+      onSuccess?.({ id: data.id });
+    } catch {
+      setError("Could not reach the server. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function analyzeFile(fileToAnalyze: File) {
+    setError(null);
+    setLimitState(null);
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", fileToAnalyze);
+      const response = await fetch("/api/upload-analyze", {
+        method: "POST",
+        body:   formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        handleApiError(data);
+        return;
+      }
+      if (typeof data?.id !== "string") {
+        setError("Unexpected response from the server. Please try again.");
+        return;
+      }
+      onSuccess?.({ id: data.id });
+    } catch {
+      setError("Could not reach the server. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // ── file selection ──────────────────────────────────────────────────────
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0] ?? null;
-    e.target.value = ""; // reset so the same file can be re-selected after clearing
+    e.target.value = "";
     if (!selected) return;
 
     const name  = selected.name.toLowerCase();
@@ -76,8 +160,8 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
 
     setFile(selected);
     setError(null);
-    setResult(null);
-    setText(""); // clear any pasted text
+    setLimitState(null);
+    setText("");
   }
 
   function clearFile() {
@@ -85,85 +169,36 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
     setError(null);
   }
 
-  // ── submit ──────────────────────────────────────────────────────────────
+  // ── submit (with hard double-submit guard) ────────────────────────────
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setResult(null);
-    setLoading(true);
-    setLoadingMessageIndex(0);
-
-    intervalRef.current = setInterval(() => {
-      setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-    }, 2500);
+    // Hard guard: if a submit is already in flight, ignore. React's
+    // `loading` state takes a render to disable the button, and rapid
+    // clicks (especially on slow devices) can sneak through.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
 
     try {
       if (file) {
-        // ── file mode ──────────────────────────────────────────────────
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await fetch("/api/upload-analyze", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          setError(data.error ?? "Something went wrong. Please try again.");
-          return;
-        }
-
-        const extractedText = (data as { extractedText?: string }).extractedText ?? "";
-
-        if (onSuccess) {
-          onSuccess(extractedText, data as AnalysisResult);
-        } else {
-          setResult(data as AnalysisResult);
-        }
+        await analyzeFile(file);
       } else {
-        // ── text mode (unchanged) ──────────────────────────────────────
-        const response = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          setError(data.error ?? "Something went wrong. Please try again.");
-          return;
-        }
-
-        if (onSuccess) {
-          onSuccess(text, data as AnalysisResult);
-        } else {
-          setResult(data as AnalysisResult);
-        }
+        await analyzeText(text);
       }
-    } catch {
-      setError("Could not reach the server. Please check your connection.");
     } finally {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      setLoading(false);
+      submittingRef.current = false;
     }
   }
 
   // ── derived state ───────────────────────────────────────────────────────
 
-  const charCount  = text.length;
-  const wordCount  = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
-  const isTooShort = charCount > 0 && charCount < MIN_LENGTH;
+  const charCount   = text.length;
+  const wordCount   = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const isTooShort  = charCount > 0 && charCount < MIN_LENGTH;
   const isOverLimit = charCount > MAX_LENGTH;
-  const canSubmit  = file
+  const canSubmit   = !showingLimit && (file
     ? !loading
-    : charCount >= MIN_LENGTH && !isOverLimit && !loading;
+    : charCount >= MIN_LENGTH && !isOverLimit && !loading);
 
   const counterText = isTooShort
     ? `${MIN_LENGTH - charCount} more chars needed`
@@ -173,11 +208,12 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
     ? `${wordCount.toLocaleString()} words`
     : "";
 
+  const remaining = usage ? Math.max(0, usage.documentLimit - usage.documentsUsed) : null;
+
   // ── render ──────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-4">
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -189,20 +225,9 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
       <form onSubmit={handleSubmit}>
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
           {file ? (
-            /* ── file mode ── */
             <div className="flex items-center gap-4 px-5 py-6">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-zinc-500"
-                >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
@@ -220,22 +245,13 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
                 title="Remove file"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.25"
-                  strokeLinecap="round"
-                >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
           ) : (
-            /* ── text mode ── */
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -247,7 +263,6 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
             />
           )}
 
-          {/* Footer */}
           <div className="flex items-center justify-between gap-3 border-t border-zinc-100 px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
               {!file && (
@@ -286,30 +301,56 @@ export function ActionPlanForm({ onSuccess }: Props = {}) {
                 {loading && (
                   <span className="size-4 animate-spin rounded-full border-2 border-zinc-500 border-t-white" />
                 )}
-                {loading ? "Analyzing…" : "Analyze →"}
+                {loading ? "Submitting…" : "Analyze →"}
               </button>
             </div>
           </div>
         </div>
       </form>
 
-      {loading && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
-          <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
-          <p className="text-sm text-zinc-500">{LOADING_MESSAGES[loadingMessageIndex]}</p>
+      {/* Persistent usage indicator — collapses when at limit. */}
+      {usage && !showingLimit && remaining !== null && (
+        <p className="px-1 text-[11.5px] text-zinc-500">
+          <span className="font-medium text-zinc-700">{remaining}</span>
+          {" of "}
+          <span className="font-medium text-zinc-700">{usage.documentLimit}</span>
+          {" early-access "}
+          {usage.documentLimit === 1 ? "analysis" : "analyses"}
+          {" remaining."}
+        </p>
+      )}
+
+      {/* Limit-reached notice — early-access framed; links to /early-access
+          for org code path. Replaces both the usage indicator and the
+          generic error banner. */}
+      {effectiveLimit && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-[13px] font-semibold text-amber-900">
+            You&apos;ve reached your early-access limit
+          </p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-amber-800">
+            You&apos;ve used all {effectiveLimit.documentLimit} of your early-access{" "}
+            {effectiveLimit.documentLimit === 1 ? "analysis" : "analyses"}. We&apos;ll
+            let you know when general access opens — or, if you have an
+            organization access code,{" "}
+            <Link
+              href="/early-access"
+              className="font-semibold text-amber-900 underline decoration-amber-400 underline-offset-2 transition-colors hover:decoration-amber-600"
+            >
+              enter it here
+            </Link>{" "}
+            for higher limits.
+          </p>
         </div>
       )}
 
-      {error && (
+      {/* Generic error (non-limit). Only renders when there's a real error
+          and we're not already showing the limit notice. */}
+      {error && !effectiveLimit && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
-
-      {/* Inline fallback: only rendered when onSuccess is not provided
-          (e.g. standalone embedding or local development). In the main
-          app flow onSuccess is always passed, so this branch stays dormant. */}
-      {result && <AnalysisResults result={result} />}
     </div>
   );
 }

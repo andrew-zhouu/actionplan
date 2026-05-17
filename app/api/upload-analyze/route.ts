@@ -1,8 +1,12 @@
 import { type NextRequest } from "next/server";
+import { after } from "next/server";
+import { eq } from "drizzle-orm";
 import pdfParse from "pdf-parse";
-import { analyzeDocument, ModelOutputError } from "@/lib/ai/analyze-document";
+import { analyzeDocument } from "@/lib/ai/analyze-document";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
+import { getSession } from "@/lib/auth/session";
+import { loadTrialUser, enforceLimit, incrementUsage } from "@/lib/auth/trial";
 
 const MAX_FILE_BYTES  = 5 * 1024 * 1024; // 5 MB
 const MIN_TEXT_LENGTH = 50;
@@ -24,12 +28,48 @@ async function extractText(file: File): Promise<string> {
     const parsed = await pdfParse(buffer);
     return parsed.text;
   }
-
-  // Plain text
   return buffer.toString("utf-8");
 }
 
+/**
+ * Persistent-processing upload-analyze endpoint. PDF text extraction
+ * stays synchronous (fast enough to be part of the validation phase);
+ * the model call runs in `after()` so the response returns immediately
+ * with the inserted document id.
+ */
 export async function POST(request: NextRequest) {
+  // ── Session gate ─────────────────────────────────────────────────────────
+  const session = await getSession();
+  if (!session) {
+    return Response.json(
+      { error: "not_signed_in", message: "Please sign in at /early-access to continue." },
+      { status: 401 },
+    );
+  }
+
+  const user = await loadTrialUser(session.userId);
+  if (!user) {
+    return Response.json(
+      { error: "account_not_found", message: "Your session is no longer valid. Please sign in again at /early-access." },
+      { status: 401 },
+    );
+  }
+
+  // ── Trial limit ──────────────────────────────────────────────────────────
+  const limitDenial = enforceLimit(user);
+  if (limitDenial) {
+    return Response.json(
+      {
+        error:         "limit_reached",
+        message:       `You've used all ${limitDenial.documentLimit} of your trial analyses. Email us if you'd like more access.`,
+        documentsUsed: limitDenial.documentsUsed,
+        documentLimit: limitDenial.documentLimit,
+      },
+      { status: 403 },
+    );
+  }
+
+  // ── Form data + file validation ──────────────────────────────────────────
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -56,7 +96,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Extract text from the file
+  // ── Extract text (sync, fast for typical files) ─────────────────────────
   let raw: string;
   try {
     raw = (await extractText(file)).trim();
@@ -77,49 +117,61 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Soft cap — keeps the analysis pipeline working for very large files
   const text = raw.length > MAX_TEXT_LENGTH ? raw.slice(0, MAX_TEXT_LENGTH) : raw;
 
+  // ── Insert placeholder row ──────────────────────────────────────────────
+  const id = crypto.randomUUID();
   try {
-    const result = await analyzeDocument(text);
-
-    // DB write — graceful degradation identical to /api/analyze
-    try {
-      const id = crypto.randomUUID();
-      await db.insert(documents).values({
-        id,
-        createdAt:    new Date(),
-        documentType: result.documentType,
-        complexity:   result.complexityLevel,
-        sourceText:   text,
-        result:       JSON.stringify(result),
-      });
-      // extractedText always included so the client has it for the /workspace fallback
-      return Response.json({ ...result, id, extractedText: text });
-    } catch (dbErr) {
-      console.error("[/api/upload-analyze] DB write failed, returning without id:", dbErr);
-      return Response.json({ ...result, extractedText: text });
-    }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-
-    if (message.includes("ANTHROPIC_API_KEY")) {
-      console.error("[/api/upload-analyze] Configuration error:", message);
-      return Response.json(
-        { error: "Server configuration error. Contact the site administrator." },
-        { status: 500 },
-      );
-    }
-
-    if (err instanceof ModelOutputError) {
-      console.error("[/api/upload-analyze] Model output error:", message);
-      return Response.json(
-        { error: "The model returned an unexpected response. Please try again." },
-        { status: 502 },
-      );
-    }
-
-    console.error("[/api/upload-analyze] Unexpected error:", err);
-    return Response.json({ error: "Analysis failed. Please try again." }, { status: 500 });
+    await db.insert(documents).values({
+      id,
+      userId:       session.userId,
+      status:       "processing",
+      documentType: "Processing…",
+      complexity:   "Unknown",
+      result:       "{}",
+      sourceText:   text,
+      createdAt:    new Date(),
+    });
+  } catch (dbErr) {
+    console.error("[/api/upload-analyze] DB insert failed:", dbErr);
+    return Response.json(
+      { error: "save_failed", message: "Could not save your document. Please try again." },
+      { status: 500 },
+    );
   }
+
+  // ── Claim trial slot upfront ────────────────────────────────────────────
+  try {
+    await incrementUsage(session.userId);
+  } catch (usageErr) {
+    console.error("[/api/upload-analyze] incrementUsage failed:", usageErr);
+  }
+
+  // ── Background model call ───────────────────────────────────────────────
+  after(async () => {
+    try {
+      const result = await analyzeDocument(text);
+      await db
+        .update(documents)
+        .set({
+          status:       "complete",
+          documentType: result.documentType,
+          complexity:   result.complexityLevel,
+          result:       JSON.stringify(result),
+        })
+        .where(eq(documents.id, id));
+    } catch (err) {
+      console.error(`[/api/upload-analyze after()] Analysis failed for ${id}:`, err);
+      try {
+        await db
+          .update(documents)
+          .set({ status: "failed" })
+          .where(eq(documents.id, id));
+      } catch (updateErr) {
+        console.error(`[/api/upload-analyze after()] Failed to mark ${id} as failed:`, updateErr);
+      }
+    }
+  });
+
+  return Response.json({ id, status: "processing" });
 }

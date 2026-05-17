@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { taskDrafts } from "@/lib/db/schema";
+import { assertOwnsDocument } from "@/lib/auth/ownership";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,9 @@ export async function generateTaskDraft(
   draftType:   DraftType,
   ctx:         DraftContext,
 ): Promise<{ draft: TaskDraft; persisted: boolean }> {
+  // Ownership — fail fast before consuming API key or model tokens.
+  await assertOwnsDocument(documentId);
+
   if (!isValidDraftType(draftType)) {
     throw new Error("Invalid draft type");
   }
@@ -206,6 +210,8 @@ export async function approveTaskDraft(
   kind:        "action_item" | "deadline",
   taskIndex:   number,
 ): Promise<{ approvedAt: string; persisted: boolean }> {
+  await assertOwnsDocument(documentId);
+
   const now = new Date();
   let persisted = false;
   try {
@@ -243,6 +249,8 @@ export async function unapproveTaskDraft(
   kind:        "action_item" | "deadline",
   taskIndex:   number,
 ): Promise<{ persisted: boolean }> {
+  await assertOwnsDocument(documentId);
+
   let persisted = false;
   try {
     await db
@@ -280,6 +288,8 @@ export async function saveTaskDraftEdits(
   taskIndex:   number,
   edits:       { subject: string | null; body: string },
 ): Promise<{ persisted: boolean }> {
+  await assertOwnsDocument(documentId);
+
   if (typeof edits.body !== "string" || edits.body.trim().length === 0) {
     throw new Error("Draft body cannot be empty");
   }
@@ -330,6 +340,8 @@ export async function discardTaskDraft(
   kind:        "action_item" | "deadline",
   taskIndex:   number,
 ): Promise<void> {
+  await assertOwnsDocument(documentId);
+
   try {
     await db
       .delete(taskDrafts)

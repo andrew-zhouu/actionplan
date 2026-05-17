@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { taskPlans } from "@/lib/db/schema";
+import { assertOwnsDocument } from "@/lib/auth/ownership";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -106,6 +107,9 @@ export async function generateTaskPlan(
   taskIndex:   number,
   ctx:         PlanContext,
 ): Promise<{ steps: PlanStep[]; persisted: boolean }> {
+  // 0. Ownership — fail fast before consuming an API key or model tokens.
+  await assertOwnsDocument(documentId);
+
   // 1. Call the model ──────────────────────────────────────────────────────────
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");

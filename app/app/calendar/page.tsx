@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { Suspense } from "react";
-import { desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { documents, taskCompletions } from "@/lib/db/schema";
+import { getSession } from "@/lib/auth/session";
 import { Topbar } from "@/components/shell/topbar";
 import { CalendarView, type CalendarDeadline } from "@/components/calendar/calendar-view";
 import { parseDate } from "@/lib/utils/dates";
@@ -49,17 +50,25 @@ function SchemaWarning() {
 
 export default async function CalendarPage() {
   // 1. Fetch documents (same 50-row cap as /tasks) ─────────────────────────────
+  // Scope to the signed-in user
+  const session = await getSession();
+  const userId  = session?.userId;
+
   let docs: { id: string; documentType: string; result: string }[] = [];
   try {
-    docs = await db
-      .select({
-        id:           documents.id,
-        documentType: documents.documentType,
-        result:       documents.result,
-      })
-      .from(documents)
-      .orderBy(desc(documents.createdAt))
-      .limit(50);
+    if (userId) {
+      docs = await db
+        .select({
+          id:           documents.id,
+          documentType: documents.documentType,
+          result:       documents.result,
+        })
+        .from(documents)
+        // Only complete docs — calendar parses result for deadlines.
+        .where(and(eq(documents.userId, userId), eq(documents.status, "complete")))
+        .orderBy(desc(documents.createdAt))
+        .limit(50);
+    }
   } catch (err) {
     return (
       <>

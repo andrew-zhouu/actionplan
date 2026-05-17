@@ -27,10 +27,10 @@ export default function LandingPage() {
             <span aria-hidden="true">→</span>
           </Link>
           <Link
-            href="/app"
+            href="/early-access"
             className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-[13.5px] font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
-            Open the app
+            Get early access
           </Link>
         </div>
         <p className="mt-6 text-[12px] text-zinc-400">
@@ -85,10 +85,10 @@ export default function LandingPage() {
             See the demo →
           </Link>
           <Link
-            href="/app"
+            href="/early-access"
             className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-[13.5px] font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
-            Open the app
+            Get early access
           </Link>
         </div>
       </section>

@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { taskCompletions } from "@/lib/db/schema";
+import { assertOwnsDocument } from "@/lib/auth/ownership";
 
 export async function toggleTaskCompletion(
   documentId: string,
@@ -11,6 +12,10 @@ export async function toggleTaskCompletion(
   taskIndex: number,
   currentlyDone: boolean,
 ) {
+  // Ownership: only the signed-in owner of this document may toggle
+  // its completion state. Throws on missing session / unowned document.
+  await assertOwnsDocument(documentId);
+
   if (currentlyDone) {
     await db
       .delete(taskCompletions)

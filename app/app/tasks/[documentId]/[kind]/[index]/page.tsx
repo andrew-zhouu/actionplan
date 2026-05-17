@@ -13,6 +13,7 @@ import { TaskPlanSection } from "@/components/tasks/task-plan-section";
 import { TaskDraftSection } from "@/components/tasks/task-draft-section";
 import type { PlanStep } from "@/app/actions/task-plans";
 import type { TaskDraft } from "@/app/actions/task-drafts";
+import { getSession } from "@/lib/auth/session";
 import { COMPLEXITY_COLORS } from "@/lib/constants";
 import { parseDate, formatDeadlineDate } from "@/lib/utils/dates";
 
@@ -152,11 +153,15 @@ export default async function TaskWorkspacePage({ params }: Props) {
   const taskIndex = parseInt(indexStr, 10);
   if (isNaN(taskIndex) || taskIndex < 0) notFound();
 
-  // ── Fetch document ─────────────────────────────────────────────────────────
+  // ── Session + ownership scoping ────────────────────────────────────────────
+  const session = await getSession();
+  if (!session) notFound();
+
+  // ── Fetch document (must be owned by signed-in user) ──────────────────────
   const rows = await db
     .select()
     .from(documents)
-    .where(eq(documents.id, documentId))
+    .where(and(eq(documents.id, documentId), eq(documents.userId, session.userId)))
     .limit(1);
 
   if (rows.length === 0) notFound();
