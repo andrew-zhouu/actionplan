@@ -1,13 +1,14 @@
 export const dynamic = "force-dynamic";
 
 import { Suspense } from "react";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { Topbar } from "@/components/shell/topbar";
 import { InboxRow } from "@/components/inbox/inbox-row";
 import { InboxFilters } from "@/components/inbox/inbox-filters";
+import { getSession } from "@/lib/auth/session";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -110,23 +111,43 @@ export default async function InboxPage({ searchParams }: Props) {
 
   const hasFilters = !!(q || complexity);
 
+  // Scope to the signed-in user. Middleware guarantees a session for this
+  // route, but defensive null-handling avoids crashing if cookies expire.
+  const session = await getSession();
+  const userId  = session?.userId;
+
   let rows: Row[] = [];
 
-  try {
-    rows = await db
-      .select({
-        id:           documents.id,
-        createdAt:    documents.createdAt,
-        documentType: documents.documentType,
-        complexity:   documents.complexity,
-        result:       documents.result,
-      })
-      .from(documents)
-      .where(complexity ? eq(documents.complexity, complexity) : undefined)
-      .orderBy(desc(documents.createdAt))
-      .limit(50);
-  } catch {
-    // DB not yet initialised or unavailable — fall through to empty state.
+  if (userId) {
+    try {
+      rows = await db
+        .select({
+          id:           documents.id,
+          createdAt:    documents.createdAt,
+          documentType: documents.documentType,
+          complexity:   documents.complexity,
+          result:       documents.result,
+        })
+        .from(documents)
+        .where(
+          // Always scope to signed-in user AND complete status — processing
+          // and failed rows are surfaced on /app/new, not in the inbox list.
+          complexity
+            ? and(
+                eq(documents.userId, userId),
+                eq(documents.status, "complete"),
+                eq(documents.complexity, complexity),
+              )
+            : and(
+                eq(documents.userId, userId),
+                eq(documents.status, "complete"),
+              ),
+        )
+        .orderBy(desc(documents.createdAt))
+        .limit(50);
+    } catch {
+      // DB not yet initialised or unavailable — fall through to empty state.
+    }
   }
 
   // Post-fetch text filter: covers documentType and the extracted summary excerpt.

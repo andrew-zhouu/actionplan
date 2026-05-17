@@ -34,10 +34,10 @@ export default function MarketingLayout({
               Demo
             </Link>
             <Link
-              href="/app"
+              href="/early-access"
               className="rounded-md bg-zinc-900 px-3 py-1.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-zinc-700"
             >
-              Open app →
+              Get early access →
             </Link>
           </nav>
         </div>

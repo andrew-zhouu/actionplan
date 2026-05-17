@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { documents, taskCompletions } from "@/lib/db/schema";
+import { getSession } from "@/lib/auth/session";
+import { DocProcessingPage } from "@/components/docs/doc-processing-page";
 import type { AnalysisResult } from "@/types/analysis";
 import { Topbar } from "@/components/shell/topbar";
 import { DocWorkspace } from "@/components/workspace/doc-workspace";
@@ -268,15 +271,74 @@ type Props = { params: Promise<{ id: string }> };
 export default async function DocPage({ params }: Props) {
   const { id } = await params;
 
+  // Middleware guarantees a session for /app/*, but bail to 404 if it's
+  // missing (e.g. cookie expired between middleware check and render).
+  const session = await getSession();
+  if (!session) notFound();
+
+  // Scope to the signed-in user — strangers shouldn't be able to read each
+  // other's documents even with a guessable id.
   const rows = await db
     .select()
     .from(documents)
-    .where(eq(documents.id, id))
+    .where(and(eq(documents.id, id), eq(documents.userId, session.userId)))
     .limit(1);
 
   if (rows.length === 0) notFound();
 
-  const doc    = rows[0];
+  const doc = rows[0];
+
+  // ── Branch on status: processing / failed / complete ────────────────────
+  // Processing/failed rows have placeholder values for documentType,
+  // complexity, and result — we must not try to render the full workspace
+  // until status === "complete".
+  if (doc.status === "processing") {
+    return (
+      <>
+        <Topbar crumbs={[{ label: "Inbox", href: "/app" }, "Analyzing"]} />
+        <DocProcessingPage id={doc.id} />
+      </>
+    );
+  }
+
+  if (doc.status === "failed") {
+    return (
+      <>
+        <Topbar crumbs={[{ label: "Inbox", href: "/app" }, "Failed"]} />
+        <div className="flex flex-1 flex-col overflow-y-auto bg-zinc-50">
+          <div className="mx-auto w-full max-w-2xl px-6 py-16">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-8 py-12 text-center">
+              <h2 className="font-display text-[22px] font-normal tracking-tight text-amber-900">
+                Analysis failed
+              </h2>
+              <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-relaxed text-amber-800">
+                Something went wrong while analyzing this document. Try
+                starting another, or come back later — server hiccups
+                sometimes resolve on their own.
+              </p>
+              <div className="mt-7 flex items-center justify-center gap-3">
+                <Link
+                  href="/app/new"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-700"
+                >
+                  Start another
+                  <span aria-hidden="true">→</span>
+                </Link>
+                <Link
+                  href="/app"
+                  className="text-[12.5px] font-medium text-amber-800 transition-colors hover:text-amber-900"
+                >
+                  Back to inbox
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // status === "complete" — render full workspace
   const result = JSON.parse(doc.result) as AnalysisResult;
 
   // ── Task completions — graceful degrade if table is missing ──────────────
