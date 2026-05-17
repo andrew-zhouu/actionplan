@@ -140,7 +140,7 @@ export function CalendarView({ deadlines }: Props) {
     const sp = new URLSearchParams();
     sp.set("month", `${yr}-${pad2(mo + 1)}`);
     if (day) sp.set("day", day);
-    router.replace(`/calendar?${sp.toString()}`, { scroll: false });
+    router.replace(`/app/calendar?${sp.toString()}`, { scroll: false });
   }
 
   function navigateMonth(newYear: number, newMonth: number, opts?: { day?: string | null }) {
@@ -412,14 +412,14 @@ function SelectedDayPanel({
                   </p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <Link
-                      href={`/docs/${d.documentId}`}
+                      href={`/app/docs/${d.documentId}`}
                       className="text-[11px] text-zinc-500 transition-colors hover:text-zinc-700"
                     >
                       {d.documentType} ↗
                     </Link>
                     <span aria-hidden="true" className="select-none text-zinc-200">·</span>
                     <Link
-                      href={`/tasks/${d.documentId}/deadline/${d.taskIndex}`}
+                      href={`/app/tasks/${d.documentId}/deadline/${d.taskIndex}`}
                       className="text-[11px] font-medium text-zinc-600 transition-colors hover:text-zinc-900"
                     >
                       Open task →
@@ -465,7 +465,7 @@ function EmptyState() {
         Analyze a document with deadlines to see them land on the calendar.
       </p>
       <Link
-        href="/new"
+        href="/app/new"
         className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
       >
         Analyze a document →

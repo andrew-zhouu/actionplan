@@ -16,20 +16,20 @@ export default function WorkspacePage() {
   useEffect(() => {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      router.replace("/");
+      router.replace("/app");
       return;
     }
     try {
       setData(JSON.parse(raw));
     } catch {
       sessionStorage.removeItem(STORAGE_KEY);
-      router.replace("/");
+      router.replace("/app");
     }
   }, [router]);
 
   function handleReset() {
     sessionStorage.removeItem(STORAGE_KEY);
-    router.push("/");
+    router.push("/app");
   }
 
   if (!data) {
@@ -45,7 +45,7 @@ export default function WorkspacePage() {
 
   return (
     <>
-      <Topbar crumbs={[{ label: "Inbox", href: "/" }, data.result.documentType]} />
+      <Topbar crumbs={[{ label: "Inbox", href: "/app" }, data.result.documentType]} />
       <WorkspaceView
         text={data.text}
         result={data.result}

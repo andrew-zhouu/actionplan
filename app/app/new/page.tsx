@@ -13,16 +13,16 @@ export default function NewDocumentPage() {
 
   function handleSuccess(text: string, response: AnalyzeResponse) {
     if (response.id) {
-      router.push(`/docs/${response.id}`);
+      router.push(`/app/docs/${response.id}`);
     } else {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ text, result: response }));
-      router.push("/workspace");
+      router.push("/app/workspace");
     }
   }
 
   return (
     <>
-      <Topbar crumbs={[{ label: "Inbox", href: "/" }, "New document"]} />
+      <Topbar crumbs={[{ label: "Inbox", href: "/app" }, "New document"]} />
       <div className="flex-1 overflow-y-auto bg-zinc-50">
         <main className="mx-auto max-w-2xl px-6 py-12">
           <div className="mb-8">

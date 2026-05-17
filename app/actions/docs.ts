@@ -9,6 +9,6 @@ export async function deleteDocument(id: string) {
   // Completions first, then the document — correct cascade order
   await db.delete(taskCompletions).where(eq(taskCompletions.documentId, id));
   await db.delete(documents).where(eq(documents.id, id));
-  revalidatePath("/");
-  revalidatePath("/tasks");
+  revalidatePath("/app");
+  revalidatePath("/app/tasks");
 }

@@ -41,7 +41,7 @@ export function TaskRow({
     });
   }
 
-  const workspaceHref = `/tasks/${documentId}/${kind}/${taskIndex}`;
+  const workspaceHref = `/app/tasks/${documentId}/${kind}/${taskIndex}`;
 
   return (
     <div

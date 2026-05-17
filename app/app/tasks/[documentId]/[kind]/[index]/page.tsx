@@ -318,8 +318,8 @@ export default async function TaskWorkspacePage({ params }: Props) {
     <>
       <Topbar
         crumbs={[
-          { label: "Tasks", href: "/tasks" },
-          { label: doc.documentType, href: `/docs/${documentId}` },
+          { label: "Tasks", href: "/app/tasks" },
+          { label: doc.documentType, href: `/app/docs/${documentId}` },
           taskKind === "deadline" ? "Deadline" : "Action item",
         ]}
       />
@@ -422,7 +422,7 @@ export default async function TaskWorkspacePage({ params }: Props) {
                   {result.summary}
                 </p>
                 <Link
-                  href={`/docs/${documentId}`}
+                  href={`/app/docs/${documentId}`}
                   className="mt-3 inline-block text-[12px] font-medium text-zinc-500 transition-colors hover:text-zinc-900"
                 >
                   Open in document workspace →
@@ -479,7 +479,7 @@ export default async function TaskWorkspacePage({ params }: Props) {
                 )}
 
                 <Link
-                  href={`/docs/${documentId}`}
+                  href={`/app/docs/${documentId}`}
                   className="inline-block text-[12px] font-medium text-zinc-400 transition-colors hover:text-zinc-700"
                 >
                   View full document context →
@@ -551,7 +551,7 @@ export default async function TaskWorkspacePage({ params }: Props) {
                 {result.questionsToAsk.length > 3 && (
                   <div className="border-t border-zinc-100 px-5 py-3">
                     <Link
-                      href={`/docs/${documentId}?tab=questions`}
+                      href={`/app/docs/${documentId}?tab=questions`}
                       className="text-[12px] font-medium text-zinc-500 transition-colors hover:text-zinc-900"
                     >
                       {result.questionsToAsk.length - 3} more{" "}
@@ -583,7 +583,7 @@ export default async function TaskWorkspacePage({ params }: Props) {
                         return (
                           <li key={d.index}>
                             <Link
-                              href={`/tasks/${documentId}/deadline/${d.index}`}
+                              href={`/app/tasks/${documentId}/deadline/${d.index}`}
                               className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-zinc-50"
                             >
                               <div className="min-w-0 flex-1">
@@ -610,7 +610,7 @@ export default async function TaskWorkspacePage({ params }: Props) {
                     : siblingActions.map((a) => (
                         <li key={a.index}>
                           <Link
-                            href={`/tasks/${documentId}/action_item/${a.index}`}
+                            href={`/app/tasks/${documentId}/action_item/${a.index}`}
                             className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-zinc-50"
                           >
                             <p className="min-w-0 flex-1 truncate text-[12.5px] text-zinc-700">
@@ -648,7 +648,7 @@ export default async function TaskWorkspacePage({ params }: Props) {
                 {hiddenRisks > 0 && (
                   <div className="border-t border-zinc-100 px-5 py-3">
                     <Link
-                      href={`/docs/${documentId}?tab=risks`}
+                      href={`/app/docs/${documentId}?tab=risks`}
                       className="text-[12px] font-medium text-zinc-500 transition-colors hover:text-zinc-900"
                     >
                       {hiddenRisks} more {hiddenRisks === 1 ? "risk" : "risks"} in document →

@@ -21,7 +21,7 @@ export function DocWorkspace({ text, result, startHereSlot }: Props) {
     if (window.history.length > 1) {
       router.back();
     } else {
-      router.push("/");
+      router.push("/app");
     }
   }
 

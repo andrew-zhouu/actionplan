@@ -53,7 +53,7 @@ export function StartHereCard(props: StartHereProps) {
           </p>
         </div>
         <Link
-          href="/tasks"
+          href="/app/tasks"
           className="text-[11.5px] font-semibold text-emerald-700 transition-colors hover:text-emerald-900"
         >
           View tasks →
@@ -88,7 +88,7 @@ export function StartHereCard(props: StartHereProps) {
 
       {/* Compact primary CTA */}
       <Link
-        href={`/tasks/${props.documentId}/${props.kind}/${props.taskIndex}`}
+        href={`/app/tasks/${props.documentId}/${props.kind}/${props.taskIndex}`}
         className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-zinc-900 px-3 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-zinc-700"
       >
         Open task

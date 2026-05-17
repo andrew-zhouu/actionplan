@@ -185,7 +185,7 @@ export async function generateTaskDraft(
     // Table missing or other write error: still return the draft in-memory
   }
 
-  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+  revalidatePath(`/app/tasks/${documentId}/${kind}/${taskIndex}`);
 
   return {
     draft: {
@@ -228,7 +228,7 @@ export async function approveTaskDraft(
     // Missing table: approval is in-memory only on the client this session
   }
 
-  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+  revalidatePath(`/app/tasks/${documentId}/${kind}/${taskIndex}`);
 
   return { approvedAt: now.toISOString(), persisted };
 }
@@ -264,7 +264,7 @@ export async function unapproveTaskDraft(
     // Missing table: state change is in-memory only this session
   }
 
-  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+  revalidatePath(`/app/tasks/${documentId}/${kind}/${taskIndex}`);
 
   return { persisted };
 }
@@ -315,7 +315,7 @@ export async function saveTaskDraftEdits(
     // Missing table: edits stay in-memory only this session
   }
 
-  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+  revalidatePath(`/app/tasks/${documentId}/${kind}/${taskIndex}`);
 
   return { persisted };
 }
@@ -348,5 +348,5 @@ export async function discardTaskDraft(
     // Missing table: nothing to delete, succeed silently
   }
 
-  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+  revalidatePath(`/app/tasks/${documentId}/${kind}/${taskIndex}`);
 }
