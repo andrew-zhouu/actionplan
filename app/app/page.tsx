@@ -69,7 +69,7 @@ function EmptyInbox() {
         do, by when, and what to watch out for.
       </p>
       <Link
-        href="/new"
+        href="/app/new"
         className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
       >
         Analyze your first document →
@@ -175,7 +175,7 @@ export default async function InboxPage({ searchParams }: Props) {
                 <p className="text-sm text-zinc-400">
                   No documents match your search.{" "}
                   <Link
-                    href="/"
+                    href="/app"
                     className="font-medium text-zinc-600 hover:text-zinc-900"
                   >
                     Clear filters →
@@ -188,7 +188,7 @@ export default async function InboxPage({ searchParams }: Props) {
                   <li key={row.id}>
                     <InboxRow
                       id={row.id}
-                      href={`/docs/${row.id}`}
+                      href={`/app/docs/${row.id}`}
                       documentType={row.documentType}
                       complexity={row.complexity}
                       formattedDate={formatDate(row.createdAt)}

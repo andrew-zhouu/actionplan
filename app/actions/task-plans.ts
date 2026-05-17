@@ -186,7 +186,7 @@ export async function generateTaskPlan(
     // Table missing or other write error: we still return the steps in-memory
   }
 
-  revalidatePath(`/tasks/${documentId}/${kind}/${taskIndex}`);
+  revalidatePath(`/app/tasks/${documentId}/${kind}/${taskIndex}`);
 
   return { steps, persisted };
 }

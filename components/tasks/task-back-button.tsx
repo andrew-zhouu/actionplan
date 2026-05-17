@@ -15,7 +15,7 @@ export function TaskBackButton() {
     if (window.history.length > 1) {
       router.back();
     } else {
-      router.push("/tasks");
+      router.push("/app/tasks");
     }
   }
 

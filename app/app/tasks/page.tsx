@@ -32,7 +32,7 @@ function buildTasksHref({
   if (type)    p.set("type",    type);
   if (overdue) p.set("overdue", "1");
   const qs = p.toString();
-  return qs ? `/tasks?${qs}` : "/tasks";
+  return qs ? `/app/tasks?${qs}` : "/app/tasks";
 }
 
 // ─── small ui pieces ─────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ function EmptyTasks() {
         Analyze a document to generate action items and deadlines.
       </p>
       <Link
-        href="/new"
+        href="/app/new"
         className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
       >
         Analyze a document →
@@ -329,7 +329,7 @@ export default async function TasksPage({ searchParams }: Props) {
                 ) : (
                   <p className="text-sm text-zinc-400">
                     All tasks complete.{" "}
-                    <Link href="/tasks?show=all" className="font-medium text-zinc-600 hover:text-zinc-900">
+                    <Link href="/app/tasks?show=all" className="font-medium text-zinc-600 hover:text-zinc-900">
                       Show completed →
                     </Link>
                   </p>
@@ -356,7 +356,7 @@ export default async function TasksPage({ searchParams }: Props) {
                             label={item.label}
                             meta={item.meta}
                             sourceLabel={item.documentType}
-                            sourceHref={`/docs/${item.documentId}`}
+                            sourceHref={`/app/docs/${item.documentId}`}
                           />
                         </li>
                       ))}
@@ -379,7 +379,7 @@ export default async function TasksPage({ searchParams }: Props) {
                             overdue={false}
                             label={item.label}
                             sourceLabel={item.documentType}
-                            sourceHref={`/docs/${item.documentId}`}
+                            sourceHref={`/app/docs/${item.documentId}`}
                           />
                         </li>
                       ))}

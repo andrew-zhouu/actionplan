@@ -62,11 +62,11 @@ function IconPlus() {
 }
 
 const NAV = [
-  { key: "inbox",     label: "Inbox",     href: "/",   Icon: IconInbox },
-  { key: "dashboard", label: "Dashboard", href: "/dashboard",  Icon: IconGrid },
-  { key: "tasks",     label: "Tasks",     href: "/tasks",  Icon: IconCheck },
-  { key: "calendar",  label: "Calendar",  href: "/calendar",  Icon: IconCalendar },
-  { key: "library",   label: "Library",   href: null,  Icon: IconLibrary },
+  { key: "inbox",     label: "Inbox",     href: "/app",           Icon: IconInbox },
+  { key: "dashboard", label: "Dashboard", href: "/app/dashboard", Icon: IconGrid },
+  { key: "tasks",     label: "Tasks",     href: "/app/tasks",     Icon: IconCheck },
+  { key: "calendar",  label: "Calendar",  href: "/app/calendar",  Icon: IconCalendar },
+  { key: "library",   label: "Library",   href: null,             Icon: IconLibrary },
 ] as const;
 
 export function Sidebar() {
@@ -88,7 +88,7 @@ export function Sidebar() {
       {/* New document */}
       <div className="px-3 pb-3">
         <Link
-          href="/new"
+          href="/app/new"
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
         >
           <IconPlus />
@@ -112,7 +112,7 @@ export function Sidebar() {
             );
           }
 
-          const isActive = pathname === href || (key === "inbox" && pathname === "/new");
+          const isActive = pathname === href || (key === "inbox" && pathname === "/app/new");
           return (
             <Link
               key={key}

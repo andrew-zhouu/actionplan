@@ -30,10 +30,10 @@ export async function toggleTaskCompletion(
       completedAt: new Date(),
     });
   }
-  revalidatePath("/tasks");
-  // Keep the Start Here card on /docs/[id] in sync with completion state
-  revalidatePath(`/docs/${documentId}`);
-  // Keep the day-cell indicators on /calendar in sync (all-done check,
+  revalidatePath("/app/tasks");
+  // Keep the Start Here card on /app/docs/[id] in sync with completion state
+  revalidatePath(`/app/docs/${documentId}`);
+  // Keep the day-cell indicators on /app/calendar in sync (all-done check,
   // overdue red dot, count) — calendar reads from the same taskCompletions.
-  revalidatePath("/calendar");
+  revalidatePath("/app/calendar");
 }

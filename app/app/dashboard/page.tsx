@@ -529,7 +529,7 @@ export default async function DashboardPage() {
                 </h1>
               </div>
               <Link
-                href="/new"
+                href="/app/new"
                 className="mt-1 shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3.5 py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-zinc-700"
               >
                 + New document
@@ -581,7 +581,7 @@ export default async function DashboardPage() {
                   Analyze a document to see your deadlines and action items here.
                 </p>
                 <Link
-                  href="/new"
+                  href="/app/new"
                   className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
                 >
                   Analyze a document →
@@ -621,7 +621,7 @@ export default async function DashboardPage() {
                                   </span>
                                   <span className="select-none text-red-200">·</span>
                                   <Link
-                                    href={`/docs/${item.documentId}`}
+                                    href={`/app/docs/${item.documentId}`}
                                     className="text-[11px] text-zinc-400 transition-colors hover:text-zinc-700"
                                   >
                                     {item.documentType}
@@ -646,7 +646,7 @@ export default async function DashboardPage() {
                           </h2>
                         </div>
                         <Link
-                          href="/tasks?type=deadlines"
+                          href="/app/tasks?type=deadlines"
                           className="text-[12px] font-medium text-zinc-600 transition-colors hover:text-zinc-900"
                         >
                           View all →
@@ -690,7 +690,7 @@ export default async function DashboardPage() {
                           {hiddenUpcoming > 0 && (
                             <div className="border-t border-zinc-100 px-4 py-3">
                               <Link
-                                href="/tasks?type=deadlines"
+                                href="/app/tasks?type=deadlines"
                                 className="text-[12px] font-medium text-zinc-600 transition-colors hover:text-zinc-900"
                               >
                                 +{hiddenUpcoming} more · View all tasks →
@@ -750,7 +750,7 @@ export default async function DashboardPage() {
                                 {group.items.map((item, i) => (
                                   <Link
                                     key={i}
-                                    href={`/docs/${group.documentId}?tab=risks&risk=${item.riskIndex}`}
+                                    href={`/app/docs/${group.documentId}?tab=risks&risk=${item.riskIndex}`}
                                     className="group flex overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 transition-colors hover:border-amber-200 hover:bg-amber-50/40"
                                   >
                                     {/* Amber accent bar */}
@@ -813,7 +813,7 @@ export default async function DashboardPage() {
                               )}
                             </div>
                             <Link
-                              href="/tasks"
+                              href="/app/tasks"
                               className="mt-4 block text-[12px] text-zinc-400 transition-colors hover:text-zinc-700"
                             >
                               View all tasks →
@@ -851,7 +851,7 @@ export default async function DashboardPage() {
                           {displayDocs.map((doc) => (
                             <li key={doc.id}>
                               <Link
-                                href={`/docs/${doc.id}`}
+                                href={`/app/docs/${doc.id}`}
                                 className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-zinc-50"
                               >
                                 <span
@@ -878,7 +878,7 @@ export default async function DashboardPage() {
                         </ul>
                         <div className="border-t border-zinc-100 px-4 py-2.5">
                           <Link
-                            href="/"
+                            href="/app"
                             className="text-[11.5px] text-zinc-400 transition-colors hover:text-zinc-700"
                           >
                             Open inbox →
