@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { after } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import pdfParse from "pdf-parse";
 import { analyzeDocument } from "@/lib/ai/analyze-document";
 import { db } from "@/lib/db";
@@ -66,6 +66,26 @@ export async function POST(request: NextRequest) {
         documentLimit: limitDenial.documentLimit,
       },
       { status: 403 },
+    );
+  }
+
+  // ── One in-flight per user ──────────────────────────────────────────────
+  // Reject if the user already has a "processing" document. Same check as
+  // /api/analyze — keeps the file-upload path consistent with the text path.
+  const inFlight = await db
+    .select({ id: documents.id })
+    .from(documents)
+    .where(and(eq(documents.userId, session.userId), eq(documents.status, "processing")))
+    .limit(1);
+
+  if (inFlight.length > 0) {
+    return Response.json(
+      {
+        error:       "analysis_in_flight",
+        message:     "You already have an analysis in progress. Please wait for it to complete before starting another.",
+        inFlightId:  inFlight[0].id,
+      },
+      { status: 409 },
     );
   }
 

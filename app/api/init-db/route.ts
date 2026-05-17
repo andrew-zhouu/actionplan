@@ -82,7 +82,7 @@ const STATEMENTS: { name: string; ddl: string }[] = [
     ddl: `
       CREATE TABLE IF NOT EXISTS trial_users (
         id                TEXT    PRIMARY KEY,
-        email             TEXT    NOT NULL UNIQUE,
+        email             TEXT    UNIQUE,
         documents_used    INTEGER NOT NULL DEFAULT 0,
         document_limit    INTEGER NOT NULL,
         access_code_used  TEXT,
@@ -100,6 +100,7 @@ const STATEMENTS: { name: string; ddl: string }[] = [
         document_limit   INTEGER NOT NULL,
         uses_remaining   INTEGER,
         expires_at       INTEGER,
+        revoked_at       INTEGER,
         created_at       INTEGER NOT NULL
       )
     `,
@@ -121,6 +122,86 @@ async function ensureDocumentsUserIdColumn(): Promise<"added" | "already-exists"
     return "added";
   } catch (err) {
     console.error("[init-db] ensureDocumentsUserIdColumn failed:", err);
+    return "skipped";
+  }
+}
+
+/**
+ * Relax the `trial_users.email` NOT NULL constraint to support code-only
+ * org signups. SQLite has no ALTER COLUMN, so the only path is a temp-
+ * table rebuild. Idempotent: PRAGMA-checks the current notnull flag and
+ * skips the rebuild when email is already nullable. Preserves all rows.
+ */
+async function ensureTrialUsersEmailNullable(): Promise<"relaxed" | "already-nullable" | "no-table" | "skipped"> {
+  try {
+    const info = await db.run(sql.raw(`PRAGMA table_info(trial_users)`));
+    const rows = (info as unknown as { rows?: Array<Record<string, unknown>> }).rows ?? [];
+
+    if (rows.length === 0) {
+      // Table doesn't exist yet — CREATE TABLE IF NOT EXISTS above already
+      // used the new nullable DDL, so nothing to do.
+      return "no-table";
+    }
+
+    const emailRow = rows.find((r) => r.name === "email");
+    if (!emailRow) return "no-table";
+    // PRAGMA returns notnull as 1 or 0
+    if (emailRow.notnull === 0 || emailRow.notnull === false) {
+      return "already-nullable";
+    }
+
+    // Rebuild — must be atomic to avoid losing rows on failure mid-migration.
+    // libSQL/Turso supports multi-statement transactions via individual statements
+    // wrapped in BEGIN / COMMIT.
+    await db.run(sql.raw(`BEGIN`));
+    try {
+      await db.run(sql.raw(`
+        CREATE TABLE trial_users_new (
+          id                TEXT    PRIMARY KEY,
+          email             TEXT    UNIQUE,
+          documents_used    INTEGER NOT NULL DEFAULT 0,
+          document_limit    INTEGER NOT NULL,
+          access_code_used  TEXT,
+          created_at        INTEGER NOT NULL,
+          last_active_at    INTEGER NOT NULL
+        )
+      `));
+      await db.run(sql.raw(`
+        INSERT INTO trial_users_new (id, email, documents_used, document_limit, access_code_used, created_at, last_active_at)
+        SELECT id, email, documents_used, document_limit, access_code_used, created_at, last_active_at
+        FROM trial_users
+      `));
+      await db.run(sql.raw(`DROP TABLE trial_users`));
+      await db.run(sql.raw(`ALTER TABLE trial_users_new RENAME TO trial_users`));
+      await db.run(sql.raw(`COMMIT`));
+      return "relaxed";
+    } catch (innerErr) {
+      try { await db.run(sql.raw(`ROLLBACK`)); } catch {}
+      throw innerErr;
+    }
+  } catch (err) {
+    console.error("[init-db] ensureTrialUsersEmailNullable failed:", err);
+    return "skipped";
+  }
+}
+
+/**
+ * Same idempotent ADD COLUMN pattern for `access_codes.revoked_at` — the
+ * revocation timestamp added so the internal manager can disable codes
+ * without hard-deleting them. Nullable; existing rows default to NULL
+ * (active), no backfill needed.
+ */
+async function ensureAccessCodesRevokedAtColumn(): Promise<"added" | "already-exists" | "skipped" | "no-table"> {
+  try {
+    const result = await db.run(sql.raw(`PRAGMA table_info(access_codes)`));
+    const rows   = (result as unknown as { rows?: Array<Record<string, unknown>> }).rows ?? [];
+    if (rows.length === 0) return "no-table"; // CREATE TABLE handled it with the new column
+    const hasRevokedAt = rows.some((r) => r.name === "revoked_at");
+    if (hasRevokedAt) return "already-exists";
+    await db.run(sql.raw(`ALTER TABLE access_codes ADD COLUMN revoked_at INTEGER`));
+    return "added";
+  } catch (err) {
+    console.error("[init-db] ensureAccessCodesRevokedAtColumn failed:", err);
     return "skipped";
   }
 }
@@ -182,14 +263,38 @@ export async function GET() {
     });
   }
 
+  let trialUsersEmailStatus: string;
+  try {
+    trialUsersEmailStatus = await ensureTrialUsersEmailNullable();
+  } catch (err) {
+    trialUsersEmailStatus = "skipped";
+    errors.push({
+      name: "trial_users.email",
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  let accessCodesRevokedAtStatus: string;
+  try {
+    accessCodesRevokedAtStatus = await ensureAccessCodesRevokedAtColumn();
+  } catch (err) {
+    accessCodesRevokedAtStatus = "skipped";
+    errors.push({
+      name: "access_codes.revoked_at",
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
+
   if (errors.length > 0) {
     return Response.json(
       {
-        status:                "partial",
-        message:               "Some statements failed. See errors below. Safe to retry.",
+        status:                   "partial",
+        message:                  "Some statements failed. See errors below. Safe to retry.",
         ensured,
-        documentsUserIdColumn: userIdStatus,
-        documentsStatusColumn: statusColumnStatus,
+        documentsUserIdColumn:    userIdStatus,
+        documentsStatusColumn:    statusColumnStatus,
+        trialUsersEmail:          trialUsersEmailStatus,
+        accessCodesRevokedAt:     accessCodesRevokedAtStatus,
         errors,
       },
       { status: 500 },
@@ -197,10 +302,12 @@ export async function GET() {
   }
 
   return Response.json({
-    status:                "ok",
-    message:               "All tables and columns ensured. Delete app/api/init-db/route.ts and redeploy.",
+    status:                   "ok",
+    message:                  "All tables and columns ensured. Delete app/api/init-db/route.ts and redeploy.",
     ensured,
-    documentsUserIdColumn: userIdStatus,
-    documentsStatusColumn: statusColumnStatus,
+    documentsUserIdColumn:    userIdStatus,
+    documentsStatusColumn:    statusColumnStatus,
+    trialUsersEmail:          trialUsersEmailStatus,
+    accessCodesRevokedAt:     accessCodesRevokedAtStatus,
   });
 }

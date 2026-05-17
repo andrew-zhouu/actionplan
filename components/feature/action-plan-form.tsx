@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const MIN_LENGTH     = 50;
@@ -40,11 +41,31 @@ type AnalyzeStart  = { id: string };
 type Props = {
   onSuccess?: (response: AnalyzeStart) => void;
   usage?:    Usage | null;
+  /** True when the user already has an in-flight analysis. Disables every
+   *  interactive control so the user can't trigger a server-side 409. The
+   *  state card above this form is what tells the user what's happening. */
+  locked?:   boolean;
+  /** The sourceText of the in-flight analysis (when locked). The textarea
+   *  is repopulated with this so the user sees exactly what's being
+   *  analyzed even after navigating away and coming back. */
+  lockedText?: string;
 };
 
-export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
-  const [text, setText]             = useState("");
-  const [file, setFile]             = useState<File | null>(null);
+export function ActionPlanForm({
+  onSuccess,
+  usage      = null,
+  locked     = false,
+  lockedText,
+}: Props = {}) {
+  const router = useRouter();
+
+  // Lazy-init `text` from `lockedText` on first mount so a user who
+  // navigates back to /app/new while their analysis is still processing
+  // immediately sees the submitted content — no flicker, no useEffect lag.
+  const [text, setText] = useState<string>(
+    locked && typeof lockedText === "string" ? lockedText : "",
+  );
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const [limitState, setLimitState] = useState<LimitReached | null>(null);
@@ -55,6 +76,23 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
   // the ref check at the top of handleSubmit prevents any race during
   // the click → loading=true → disabled-render window.
   const submittingRef = useRef(false);
+
+  // ── sync textarea with the in-flight analysis's sourceText ─────────────
+  // While locked, mirror the server's `lockedText` into the textarea so
+  // the user sees what's being analyzed even after they leave and come
+  // back. When the lock transitions OFF (analysis completed), clear the
+  // textarea so the user starts fresh for their next submission. Also
+  // force file-mode → text-mode on lock so the compose surface always
+  // shows the in-flight analysis as text regardless of how it was
+  // originally submitted.
+  useEffect(() => {
+    if (locked) {
+      if (typeof lockedText === "string") setText(lockedText);
+      setFile(null);
+    } else {
+      setText("");
+    }
+  }, [locked, lockedText]);
 
   // ── derived limit state ────────────────────────────────────────────────
   const usageAtLimit  = usage !== null && usage.documentsUsed >= usage.documentLimit;
@@ -72,6 +110,13 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
         documentsUsed: typeof data.documentsUsed === "number" ? data.documentsUsed : 0,
         documentLimit: typeof data.documentLimit === "number" ? data.documentLimit : 0,
       });
+      return;
+    }
+    if (data.error === "analysis_in_flight") {
+      // Another tab beat us, or the form was momentarily out of sync.
+      // Don't show a red error banner — just refresh the page so the
+      // state card + locked form reflect reality.
+      router.refresh();
       return;
     }
     const friendly =
@@ -173,10 +218,12 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Hard guard: if a submit is already in flight, ignore. React's
-    // `loading` state takes a render to disable the button, and rapid
-    // clicks (especially on slow devices) can sneak through.
+    // Hard guards: if a submit is already in flight OR the form is locked
+    // because the user already has a processing doc, ignore. React's
+    // `loading` and `disabled` states take a render to propagate, so a
+    // ref-check at the top of the handler closes the race window.
     if (submittingRef.current) return;
+    if (locked) return;
     submittingRef.current = true;
 
     try {
@@ -196,7 +243,10 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
   const wordCount   = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const isTooShort  = charCount > 0 && charCount < MIN_LENGTH;
   const isOverLimit = charCount > MAX_LENGTH;
-  const canSubmit   = !showingLimit && (file
+  // `inputsDisabled` covers both the brief insert window (`loading`) and the
+  // one-in-flight lock (`locked`). Used to disable every interactive control.
+  const inputsDisabled = loading || locked;
+  const canSubmit   = !showingLimit && !locked && (file
     ? !loading
     : charCount >= MIN_LENGTH && !isOverLimit && !loading);
 
@@ -241,7 +291,7 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
               <button
                 type="button"
                 onClick={clearFile}
-                disabled={loading}
+                disabled={inputsDisabled}
                 title="Remove file"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
@@ -258,7 +308,7 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
               placeholder="Paste a confusing email, letter, policy, or document here…"
               rows={10}
               maxLength={MAX_LENGTH}
-              disabled={loading}
+              disabled={inputsDisabled}
               className="w-full resize-y border-0 bg-transparent px-4 py-4 text-sm leading-relaxed text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-0 disabled:opacity-50"
             />
           )}
@@ -268,7 +318,7 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
               {!file && (
                 <button
                   type="button"
-                  disabled={loading}
+                  disabled={inputsDisabled}
                   onClick={() => setText(SAMPLE_TEXT)}
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
@@ -277,7 +327,7 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
               )}
               <button
                 type="button"
-                disabled={loading}
+                disabled={inputsDisabled}
                 onClick={() => fileInputRef.current?.click()}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
@@ -298,10 +348,18 @@ export function ActionPlanForm({ onSuccess, usage = null }: Props = {}) {
                 disabled={!canSubmit}
                 className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {loading && (
+                {/* Spinner shows for both the brief insert window (`loading`)
+                    and the longer in-flight processing state (`locked`), so
+                    the button stays visually coordinated with the
+                    "Analyzing your latest document…" card above. */}
+                {(loading || locked) && (
                   <span className="size-4 animate-spin rounded-full border-2 border-zinc-500 border-t-white" />
                 )}
-                {loading ? "Submitting…" : "Analyze →"}
+                {locked
+                  ? "Analyzing…"
+                  : loading
+                  ? "Submitting…"
+                  : "Analyze →"}
               </button>
             </div>
           </div>
