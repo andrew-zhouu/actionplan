@@ -63,10 +63,10 @@ export function DocProcessingPage({ id }: { id: string }) {
             anytime to see the result.
           </p>
           <Link
-            href="/app"
+            href="/app/new"
             className="mt-7 inline-block text-[12px] font-medium text-zinc-500 transition-colors hover:text-zinc-900"
           >
-            ← Back to inbox
+            ← Back to new document
           </Link>
         </div>
       </div>

@@ -4,7 +4,8 @@ import { trialUsers } from "@/lib/db/schema";
 
 export type TrialUser = {
   id:             string;
-  email:          string;
+  // Nullable — code-only org signups have no email; cookie carries identity.
+  email:          string | null;
   documentsUsed:  number;
   documentLimit:  number;
   accessCodeUsed: string | null;

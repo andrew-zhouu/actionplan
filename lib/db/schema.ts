@@ -15,7 +15,9 @@ export const documents = sqliteTable("documents", {
 
 export const trialUsers = sqliteTable("trial_users", {
   id:             text("id").primaryKey(),
-  email:          text("email").notNull().unique(),
+  // Nullable: code-only signups don't supply an email. UNIQUE is preserved
+  // and applies only to non-null values (SQLite treats NULLs as distinct).
+  email:          text("email").unique(),
   documentsUsed:  int("documents_used").notNull().default(0),
   documentLimit:  int("document_limit").notNull(),
   accessCodeUsed: text("access_code_used"),                                  // null = default tier
@@ -29,6 +31,7 @@ export const accessCodes = sqliteTable("access_codes", {
   documentLimit:  int("document_limit").notNull(),
   usesRemaining:  int("uses_remaining"),                                     // null = unlimited
   expiresAt:      int("expires_at", { mode: "timestamp" }),                  // null = no expiry
+  revokedAt:      int("revoked_at", { mode: "timestamp" }),                  // null = active; non-null = disabled at that time
   createdAt:      int("created_at", { mode: "timestamp" }).notNull(),
 });
 

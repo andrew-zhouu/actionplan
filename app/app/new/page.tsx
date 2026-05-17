@@ -29,13 +29,19 @@ export default async function NewDocumentPage() {
   // ── Derive top-of-page state from the user's most recent document ───────
   // We render at most one state card. Processing always shows. Recently
   // complete (≤ 1h) shows. Failed (≤ 1h) shows. Otherwise idle (no card).
+  //
+  // When the latest is processing, we also surface its sourceText so the
+  // compose form can render it in the (disabled) textarea — the user sees
+  // exactly what's being analyzed when they leave and come back.
   let recentState: NewDocumentStateProps | null = null;
+  let lockedText:  string | undefined           = undefined;
   try {
     const latest = await db
       .select({
         id:           documents.id,
         status:       documents.status,
         documentType: documents.documentType,
+        sourceText:   documents.sourceText,
         createdAt:    documents.createdAt,
       })
       .from(documents)
@@ -48,6 +54,7 @@ export default async function NewDocumentPage() {
       const ageMs = Date.now() - row.createdAt.getTime();
       if (row.status === "processing") {
         recentState = { kind: "processing", id: row.id };
+        lockedText  = row.sourceText;
       } else if (row.status === "complete" && ageMs <= READY_WINDOW_MS) {
         recentState = { kind: "ready", id: row.id, documentType: row.documentType };
       } else if (row.status === "failed" && ageMs <= READY_WINDOW_MS) {
@@ -79,7 +86,16 @@ export default async function NewDocumentPage() {
 
           {recentState && <NewDocumentState {...recentState} />}
 
-          <NewDocumentClient usage={usage} />
+          {/* Lock the compose form whenever the user's most recent doc is
+              still processing — this matches the server's one-in-flight
+              rule so the user can't get a 409 by clicking through.
+              `lockedText` is the doc's sourceText, so the textarea shows
+              what's currently being analyzed even after navigation. */}
+          <NewDocumentClient
+            usage={usage}
+            locked={recentState?.kind === "processing"}
+            lockedText={lockedText}
+          />
         </main>
       </div>
     </>
