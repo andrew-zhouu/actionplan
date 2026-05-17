@@ -48,3 +48,60 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* ─── Landing-page atmosphere + entrance animations ───────────────────────
+ *  Scoped `lp-` prefix to avoid colliding with anything else in the app.
+ *  All animations are tasteful, slow, and respect prefers-reduced-motion.
+ */
+
+@keyframes lp-fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lp-drift-a {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50%      { transform: translate(18px, -14px) rotate(2deg); }
+}
+
+@keyframes lp-drift-b {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50%      { transform: translate(-22px, 16px) rotate(-2deg); }
+}
+
+@keyframes lp-glow-pulse {
+  /* Opacity-only oscillation — the bloom's position lives in the
+   * radial-gradient itself (not in a transform), so reduced-motion users
+   * still see a correctly-centered glow when the animation is disabled. */
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1;    }
+}
+
+.lp-fade-in-up {
+  opacity: 0;
+  animation: lp-fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.lp-drift-a { animation: lp-drift-a 22s ease-in-out infinite; }
+.lp-drift-b { animation: lp-drift-b 26s ease-in-out infinite; }
+.lp-glow    { animation: lp-glow-pulse 9s ease-in-out infinite; }
+
+/* Soft dot-grid backdrop with a center-mask so it fades to nothing at
+ * the edges — gives ambient texture without a hard rectangular band. */
+.lp-dot-grid {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+          mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-fade-in-up,
+  .lp-drift-a,
+  .lp-drift-b,
+  .lp-glow {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

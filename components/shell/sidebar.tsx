@@ -74,8 +74,12 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      {/* Brand */}
-      <div className="flex items-center gap-2.5 px-4 py-[18px]">
+      {/* Brand — site-level home (public landing). App-level navigation
+          lives below in Inbox / Dashboard / Tasks / Calendar. */}
+      <Link
+        href="/"
+        className="flex items-center gap-2.5 px-4 py-[18px] transition-opacity hover:opacity-80"
+      >
         <div
           className="h-6 w-6 rounded-[6px]"
           style={{ background: "var(--accent)" }}
@@ -83,7 +87,7 @@ export function Sidebar() {
         <span className="text-sm font-semibold tracking-tight text-zinc-900">
           ActionPlan
         </span>
-      </div>
+      </Link>
 
       {/* New document */}
       <div className="px-3 pb-3">
