@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
+import { Reveal } from "@/components/marketing/reveal";
 
 export default function LandingPage() {
   return (
@@ -8,13 +9,12 @@ export default function LandingPage() {
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative isolate -mx-6 overflow-hidden px-6 py-16 sm:py-24">
 
-        {/* Client atmosphere — dot grid, bloom, glass plane, floating cards.
-            Tracks cursor for tiered parallax (depth cue). Safe on touch /
-            reduced-motion (component bails out, CSS drift continues to be
-            disabled by globals.css' prefers-reduced-motion guard). */}
+        {/* Client atmosphere — cursor parallax across dot grid, bloom,
+            glass plane, and floating cards. Bails on touch / reduced-motion. */}
         <HeroAtmosphere />
 
-        {/* Hero content — staggered fade-in (server-rendered text) */}
+        {/* Hero content — mount-time staggered fade-in (user is here at load,
+            so we want this to animate immediately, not on scroll). */}
         <div className="mx-auto max-w-3xl text-center">
           <p
             className="lp-fade-in-up mb-5 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500 backdrop-blur-sm"
@@ -53,163 +53,148 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Feature blocks ──────────────────────────────────────────────── */}
+      {/* ── Feature blocks — scroll-triggered cascade (0 / 100 / 200 ms) ─── */}
       <section className="mx-auto mt-12 grid max-w-4xl gap-5 sm:mt-20 sm:grid-cols-3 sm:gap-6">
-        <Feature
-          eyebrow="01"
-          title="Extract what matters"
-          body="Deadlines, action items, risks, and open questions — pulled from the document with sources you can verify."
-          delay={600}
-        />
-        <Feature
-          eyebrow="02"
-          title="Plan the next step"
-          body="A grounded, document-specific action plan, with each step expandable for context."
-          delay={720}
-        />
-        <Feature
-          eyebrow="03"
-          title="Draft your response"
-          body="Generate an email, letter, or talking points. Edit. Approve. Use."
-          delay={840}
-        />
+        <Reveal delay={0}>   <Feature eyebrow="01" title="Extract what matters"  body="Deadlines, action items, risks, and open questions — pulled from the document with sources you can verify." /></Reveal>
+        <Reveal delay={100}> <Feature eyebrow="02" title="Plan the next step"    body="A grounded, document-specific action plan, with each step expandable for context." /></Reveal>
+        <Reveal delay={200}> <Feature eyebrow="03" title="Draft your response"   body="Generate an email, letter, or talking points. Edit. Approve. Use." /></Reveal>
       </section>
 
-      {/* ── Document types ──────────────────────────────────────────────── */}
+      {/* ── Document types — heading reveals first, then tiles cascade ───── */}
       <section className="mx-auto mt-20 max-w-4xl sm:mt-28">
-        <div className="mb-8 text-center">
-          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-            Document types
-          </p>
-          <h2 className="mt-3 font-display text-[26px] font-normal tracking-[-0.01em] text-zinc-900 sm:text-[30px]">
-            Built for the documents that get you stuck.
-          </h2>
-        </div>
+        <Reveal delay={0}>
+          <div className="mb-8 text-center">
+            <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+              Document types
+            </p>
+            <h2 className="mt-3 font-display text-[26px] font-normal tracking-[-0.01em] text-zinc-900 sm:text-[30px]">
+              Built for the documents that get you stuck.
+            </h2>
+          </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
-          <DocType
-            label="Scholarship & financial aid letters"
-            delay={960}
-            icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                <path d="M6 12v5c3 3 9 3 12 0v-5" />
-              </svg>
-            }
-          />
-          <DocType
-            label="Leases & rental agreements"
-            delay={1020}
-            icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9.5 12 3l9 6.5V21H3z" />
-                <path d="M9 21v-7h6v7" />
-              </svg>
-            }
-          />
-          <DocType
-            label="Healthcare & insurance notices"
-            delay={1080}
-            icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 6.5-7 11-7 11z" />
-              </svg>
-            }
-          />
-          <DocType
-            label="Tax, loan & tuition statements"
-            delay={1140}
-            icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="12" y1="12" x2="12" y2="18" />
-                <path d="M9 14h6M9 17h4" />
-              </svg>
-            }
-          />
-          <DocType
-            label="Employment & onboarding packets"
-            delay={1200}
-            icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" />
-                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-              </svg>
-            }
-          />
-          <DocType
-            label="Legal & policy notices"
-            delay={1260}
-            icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3v3M5 6h14M7 6l-2 7h6M17 6l2 7h-6M3 13c.5 2 2 3 4 3M21 13c-.5 2-2 3-4 3M9 21h6M12 16v5" />
-              </svg>
-            }
-          />
+          <Reveal delay={80}>
+            <DocType
+              label="Scholarship & financial aid letters"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                </svg>
+              }
+            />
+          </Reveal>
+          <Reveal delay={140}>
+            <DocType
+              label="Leases & rental agreements"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9.5 12 3l9 6.5V21H3z" />
+                  <path d="M9 21v-7h6v7" />
+                </svg>
+              }
+            />
+          </Reveal>
+          <Reveal delay={200}>
+            <DocType
+              label="Healthcare & insurance notices"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 6.5-7 11-7 11z" />
+                </svg>
+              }
+            />
+          </Reveal>
+          <Reveal delay={260}>
+            <DocType
+              label="Tax, loan & tuition statements"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="12" y1="12" x2="12" y2="18" />
+                  <path d="M9 14h6M9 17h4" />
+                </svg>
+              }
+            />
+          </Reveal>
+          <Reveal delay={320}>
+            <DocType
+              label="Employment & onboarding packets"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" />
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                </svg>
+              }
+            />
+          </Reveal>
+          <Reveal delay={380}>
+            <DocType
+              label="Legal & policy notices"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3v3M5 6h14M7 6l-2 7h6M17 6l2 7h-6M3 13c.5 2 2 3 4 3M21 13c-.5 2-2 3-4 3M9 21h6M12 16v5" />
+                </svg>
+              }
+            />
+          </Reveal>
         </div>
       </section>
 
-      {/* ── Audience — broadened to individuals + teams/orgs ────────────── */}
-      <section
-        className="lp-fade-in-up mx-auto mt-20 max-w-3xl rounded-2xl border border-zinc-200 bg-zinc-50/60 px-6 py-8 sm:mt-28 sm:px-10"
-        style={{ animationDelay: "1320ms" }}
-      >
-        <p className="text-center font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-          Built for
-        </p>
-        <div className="mt-5 grid gap-6 sm:grid-cols-2 sm:gap-10">
-          <div>
-            <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
-              Individuals
-            </p>
-            <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
-              Students, tenants, patients, and applicants navigating a dense
-              document on their own — admissions letters, lease addenda,
-              medical notices, insurance forms.
-            </p>
+      {/* ── Audience — single reveal on scroll ──────────────────────────── */}
+      <Reveal>
+        <section className="mx-auto mt-20 max-w-3xl rounded-2xl border border-zinc-200 bg-zinc-50/60 px-6 py-8 sm:mt-28 sm:px-10">
+          <p className="text-center font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            Built for
+          </p>
+          <div className="mt-5 grid gap-6 sm:grid-cols-2 sm:gap-10">
+            <div>
+              <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
+                Individuals
+              </p>
+              <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
+                Students, tenants, patients, and applicants navigating a dense
+                document on their own — admissions letters, lease addenda,
+                medical notices, insurance forms.
+              </p>
+            </div>
+            <div>
+              <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
+                Teams &amp; organizations
+              </p>
+              <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
+                Financial aid offices, advising programs, social services, and
+                pilot partners handling these documents at scale — with shared
+                context and trial-friendly access codes.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
-              Teams &amp; organizations
-            </p>
-            <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
-              Financial aid offices, advising programs, social services, and
-              pilot partners handling these documents at scale — with shared
-              context and trial-friendly access codes.
-            </p>
-          </div>
-        </div>
-      </section>
+        </section>
+      </Reveal>
 
-      {/* ── Final CTA ───────────────────────────────────────────────────── */}
-      <section
-        className="lp-fade-in-up mx-auto mt-20 max-w-2xl pb-20 text-center sm:mt-28"
-        style={{ animationDelay: "1400ms" }}
-      >
-        <h2 className="font-display text-[28px] font-normal tracking-[-0.01em] text-zinc-900 sm:text-[34px]">
-          Try it on a real document.
-        </h2>
-        <p className="mt-3 text-[14px] leading-relaxed text-zinc-600">
-          The demo is fixed and shareable. Get early access to try it on your own document.
-        </p>
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-          <PrimaryCTA href="/early-access">Get early access</PrimaryCTA>
-          <SecondaryCTA href="/demo">See the demo</SecondaryCTA>
-        </div>
-      </section>
+      {/* ── Final CTA — single reveal on scroll ─────────────────────────── */}
+      <Reveal>
+        <section className="mx-auto mt-20 max-w-2xl pb-20 text-center sm:mt-28">
+          <h2 className="font-display text-[28px] font-normal tracking-[-0.01em] text-zinc-900 sm:text-[34px]">
+            Try it on a real document.
+          </h2>
+          <p className="mt-3 text-[14px] leading-relaxed text-zinc-600">
+            The demo is fixed and shareable. Get early access to try it on your own document.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+            <PrimaryCTA href="/early-access">Get early access</PrimaryCTA>
+            <SecondaryCTA href="/demo">See the demo</SecondaryCTA>
+          </div>
+        </section>
+      </Reveal>
     </div>
   );
 }
 
 // ─── Reusable building blocks ────────────────────────────────────────────
 
-/**
- * Primary filled-black CTA. Layered shadows + inset top highlight give it
- * baseline elevation; hover deepens both shadows and lifts the button 1px;
- * active settles back with a flatter shadow for a real pressed feel. The
- * arrow translates right slightly on hover for the "pulling" feel.
- */
 function PrimaryCTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
@@ -225,11 +210,6 @@ function PrimaryCTA({ href, children }: { href: string; children: React.ReactNod
   );
 }
 
-/**
- * Secondary outlined CTA. Subtle resting shadow, hover deepens with a soft
- * border darken and small lift, active settles flat. Matches the primary's
- * timing so the two move as a coordinated pair.
- */
 function SecondaryCTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
@@ -245,18 +225,13 @@ function Feature({
   eyebrow,
   title,
   body,
-  delay,
 }: {
   eyebrow: string;
   title:   string;
   body:    string;
-  delay:   number;
 }) {
   return (
-    <div
-      className="lp-fade-in-up group relative rounded-xl border border-zinc-200/70 bg-white/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_1px_3px_rgba(0,0,0,0.03),0_4px_12px_-4px_rgba(0,0,0,0.06)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-zinc-300/90 hover:bg-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_-2px_rgba(0,0,0,0.06),0_24px_48px_-12px_rgba(0,0,0,0.12)] sm:p-6"
-      style={{ animationDelay: `${delay}ms` }}
-    >
+    <div className="group relative h-full rounded-xl border border-zinc-200/70 bg-white/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_1px_3px_rgba(0,0,0,0.03),0_4px_12px_-4px_rgba(0,0,0,0.06)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-zinc-300/90 hover:bg-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_-2px_rgba(0,0,0,0.06),0_24px_48px_-12px_rgba(0,0,0,0.12)] sm:p-6">
       <div className="flex items-center gap-2.5">
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
           {eyebrow}
@@ -276,17 +251,12 @@ function Feature({
 function DocType({
   icon,
   label,
-  delay,
 }: {
   icon:  React.ReactNode;
   label: string;
-  delay: number;
 }) {
   return (
-    <div
-      className="lp-fade-in-up group flex items-center gap-3 rounded-lg border border-zinc-200/70 bg-white/70 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)]"
-      style={{ animationDelay: `${delay}ms` }}
-    >
+    <div className="group flex h-full items-center gap-3 rounded-lg border border-zinc-200/70 bg-white/70 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)]">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-zinc-900 group-hover:text-white">
         {icon}
       </div>
