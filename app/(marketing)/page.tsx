@@ -1,77 +1,20 @@
 import Link from "next/link";
+import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
 
 export default function LandingPage() {
   return (
     <div className="mx-auto w-full max-w-5xl px-6">
 
-      {/* ── Hero ──────────────────────────────────────────────────────────────
-          Wrapped in a positioned, isolated, overflow-hidden section so the
-          ambient background layers (dot grid, radial bloom, drifting cards)
-          can sit absolutely behind the text without leaking into adjacent
-          sections. */}
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative isolate -mx-6 overflow-hidden px-6 py-16 sm:py-24">
 
-        {/* Atmospheric background — purely decorative, behind the text */}
-        <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-          {/* Faint dot grid, center-masked so it fades to nothing at edges */}
-          <div className="lp-dot-grid absolute inset-0 opacity-70" />
+        {/* Client atmosphere — dot grid, bloom, glass plane, floating cards.
+            Tracks cursor for tiered parallax (depth cue). Safe on touch /
+            reduced-motion (component bails out, CSS drift continues to be
+            disabled by globals.css' prefers-reduced-motion guard). */}
+        <HeroAtmosphere />
 
-          {/* Soft radial ambient light — broad, multi-stop gradient applied
-              directly to a full-bleed div. No blur radius needed: the smooth
-              gradient stops do the diffusion. Position is implicit (centered
-              in the element via the gradient itself), so reduced-motion users
-              see the same softly-centered ambient as everyone else. */}
-          <div
-            className="lp-glow absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(ellipse 65% 55% at 50% 42%, " +
-                "rgba(168, 175, 240, 0.22) 0%, " +
-                "rgba(196, 200, 235, 0.14) 28%, " +
-                "rgba(220, 220, 240, 0.07) 52%, " +
-                "transparent 78%)",
-            }}
-          />
-
-          {/* Two small drifting document-fragment cards — hidden on small
-              screens to keep mobile calm. Each has a faint internal layout
-              that suggests product surface (paragraph + checklist) without
-              showing readable content. */}
-          <div className="lp-drift-a absolute left-[8%] top-[18%] hidden h-32 w-44 overflow-hidden rounded-xl border border-zinc-200/60 bg-white/65 opacity-65 shadow-sm backdrop-blur-sm sm:block">
-            {/* Paragraph-fragment surface */}
-            <div className="flex h-full flex-col gap-1.5 p-3.5">
-              <div className="h-1 w-3/5 rounded-full bg-zinc-300/70" />
-              <div className="mt-1 h-0.5 w-full rounded-full bg-zinc-200/70" />
-              <div className="h-0.5 w-11/12 rounded-full bg-zinc-200/70" />
-              <div className="h-0.5 w-4/5 rounded-full bg-zinc-200/70" />
-              <div className="h-0.5 w-3/4 rounded-full bg-zinc-200/70" />
-              <div className="mt-auto h-0.5 w-1/2 rounded-full bg-zinc-200/60" />
-            </div>
-          </div>
-
-          <div className="lp-drift-b absolute right-[7%] top-[56%] hidden h-28 w-40 overflow-hidden rounded-xl border border-zinc-200/60 bg-white/65 opacity-65 shadow-sm backdrop-blur-sm sm:block">
-            {/* Checklist-fragment surface — three rows, middle one "checked" */}
-            <div className="flex h-full flex-col gap-2 p-3">
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 shrink-0 rounded-sm border border-zinc-300/80 bg-white/80" />
-                <div className="h-0.5 flex-1 rounded-full bg-zinc-200/70" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 shrink-0 rounded-sm border border-zinc-400/80 bg-zinc-400/50" />
-                <div className="h-0.5 flex-1 rounded-full bg-zinc-200/60" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 shrink-0 rounded-sm border border-zinc-300/80 bg-white/80" />
-                <div className="h-0.5 flex-1 rounded-full bg-zinc-200/70" />
-              </div>
-              <div className="mt-auto flex justify-end">
-                <div className="h-1.5 w-7 rounded-full bg-zinc-300/60" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero content — staggered fade-in */}
+        {/* Hero content — staggered fade-in (server-rendered text) */}
         <div className="mx-auto max-w-3xl text-center">
           <p
             className="lp-fade-in-up mb-5 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500 backdrop-blur-sm"
@@ -98,21 +41,8 @@ export default function LandingPage() {
             className="lp-fade-in-up mt-9 flex flex-wrap items-center justify-center gap-3"
             style={{ animationDelay: "360ms" }}
           >
-            {/* Primary CTA — Get early access (the conversion action) */}
-            <Link
-              href="/early-access"
-              className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-zinc-700"
-            >
-              Get early access
-              <span aria-hidden="true">→</span>
-            </Link>
-            {/* Secondary CTA — See the demo (try before signing up) */}
-            <Link
-              href="/demo"
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white/90 px-5 py-2.5 text-[13.5px] font-semibold text-zinc-700 backdrop-blur-sm transition-colors hover:border-zinc-400 hover:bg-zinc-50"
-            >
-              See the demo
-            </Link>
+            <PrimaryCTA href="/early-access">Get early access</PrimaryCTA>
+            <SecondaryCTA href="/demo">See the demo</SecondaryCTA>
           </div>
           <p
             className="lp-fade-in-up mt-6 text-[12px] text-zinc-400"
@@ -123,10 +53,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Feature blocks ────────────────────────────────────────────────────
-          Soft translucent cards with a hairline trailing rule on the eyebrow.
-          Hover deepens the border and adds a soft shadow — gives each block
-          a "designed object" feel instead of a generic three-column text grid. */}
+      {/* ── Feature blocks ──────────────────────────────────────────────── */}
       <section className="mx-auto mt-12 grid max-w-4xl gap-5 sm:mt-20 sm:grid-cols-3 sm:gap-6">
         <Feature
           eyebrow="01"
@@ -148,25 +75,117 @@ export default function LandingPage() {
         />
       </section>
 
-      {/* ── Audience strip ────────────────────────────────────────────────── */}
-      <section
-        className="lp-fade-in-up mx-auto mt-20 max-w-3xl rounded-2xl border border-zinc-200 bg-zinc-50/60 px-6 py-8 text-center sm:mt-28 sm:px-10"
-        style={{ animationDelay: "960ms" }}
-      >
-        <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-          Built for
-        </p>
-        <p className="mt-3 text-[15px] leading-relaxed text-zinc-700">
-          Students navigating scholarship letters and aid packages. Tenants
-          facing lease renewals and addenda. Anyone receiving a document
-          dense enough that they don&apos;t know where to start.
-        </p>
+      {/* ── Document types ──────────────────────────────────────────────── */}
+      <section className="mx-auto mt-20 max-w-4xl sm:mt-28">
+        <div className="mb-8 text-center">
+          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            Document types
+          </p>
+          <h2 className="mt-3 font-display text-[26px] font-normal tracking-[-0.01em] text-zinc-900 sm:text-[30px]">
+            Built for the documents that get you stuck.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
+          <DocType
+            label="Scholarship & financial aid letters"
+            delay={960}
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+              </svg>
+            }
+          />
+          <DocType
+            label="Leases & rental agreements"
+            delay={1020}
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9.5 12 3l9 6.5V21H3z" />
+                <path d="M9 21v-7h6v7" />
+              </svg>
+            }
+          />
+          <DocType
+            label="Healthcare & insurance notices"
+            delay={1080}
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 6.5-7 11-7 11z" />
+              </svg>
+            }
+          />
+          <DocType
+            label="Tax, loan & tuition statements"
+            delay={1140}
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="12" x2="12" y2="18" />
+                <path d="M9 14h6M9 17h4" />
+              </svg>
+            }
+          />
+          <DocType
+            label="Employment & onboarding packets"
+            delay={1200}
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" />
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+              </svg>
+            }
+          />
+          <DocType
+            label="Legal & policy notices"
+            delay={1260}
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3v3M5 6h14M7 6l-2 7h6M17 6l2 7h-6M3 13c.5 2 2 3 4 3M21 13c-.5 2-2 3-4 3M9 21h6M12 16v5" />
+              </svg>
+            }
+          />
+        </div>
       </section>
 
-      {/* ── Final CTA ────────────────────────────────────────────────────── */}
+      {/* ── Audience — broadened to individuals + teams/orgs ────────────── */}
+      <section
+        className="lp-fade-in-up mx-auto mt-20 max-w-3xl rounded-2xl border border-zinc-200 bg-zinc-50/60 px-6 py-8 sm:mt-28 sm:px-10"
+        style={{ animationDelay: "1320ms" }}
+      >
+        <p className="text-center font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+          Built for
+        </p>
+        <div className="mt-5 grid gap-6 sm:grid-cols-2 sm:gap-10">
+          <div>
+            <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
+              Individuals
+            </p>
+            <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
+              Students, tenants, patients, and applicants navigating a dense
+              document on their own — admissions letters, lease addenda,
+              medical notices, insurance forms.
+            </p>
+          </div>
+          <div>
+            <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
+              Teams &amp; organizations
+            </p>
+            <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
+              Financial aid offices, advising programs, social services, and
+              pilot partners handling these documents at scale — with shared
+              context and trial-friendly access codes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA ───────────────────────────────────────────────────── */}
       <section
         className="lp-fade-in-up mx-auto mt-20 max-w-2xl pb-20 text-center sm:mt-28"
-        style={{ animationDelay: "1040ms" }}
+        style={{ animationDelay: "1400ms" }}
       >
         <h2 className="font-display text-[28px] font-normal tracking-[-0.01em] text-zinc-900 sm:text-[34px]">
           Try it on a real document.
@@ -175,21 +194,50 @@ export default function LandingPage() {
           The demo is fixed and shareable. Get early access to try it on your own document.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/early-access"
-            className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-zinc-700"
-          >
-            Get early access →
-          </Link>
-          <Link
-            href="/demo"
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-[13.5px] font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
-          >
-            See the demo
-          </Link>
+          <PrimaryCTA href="/early-access">Get early access</PrimaryCTA>
+          <SecondaryCTA href="/demo">See the demo</SecondaryCTA>
         </div>
       </section>
     </div>
+  );
+}
+
+// ─── Reusable building blocks ────────────────────────────────────────────
+
+/**
+ * Primary filled-black CTA. Layered shadows + inset top highlight give it
+ * baseline elevation; hover deepens both shadows and lifts the button 1px;
+ * active settles back with a flatter shadow for a real pressed feel. The
+ * arrow translates right slightly on hover for the "pulling" feel.
+ */
+function PrimaryCTA({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="group/btn inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-[13.5px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.10),0_4px_12px_-4px_rgba(0,0,0,0.20)] transition-all duration-200 ease-out hover:-translate-y-px hover:bg-zinc-800 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_2px_4px_rgba(0,0,0,0.12),0_8px_24px_-6px_rgba(0,0,0,0.25)] active:translate-y-0 active:bg-zinc-900 active:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_1px_2px_rgba(0,0,0,0.10)]"
+    >
+      {children}
+      <span
+        aria-hidden="true"
+        className="transition-transform duration-200 ease-out group-hover/btn:translate-x-0.5"
+      >→</span>
+    </Link>
+  );
+}
+
+/**
+ * Secondary outlined CTA. Subtle resting shadow, hover deepens with a soft
+ * border darken and small lift, active settles flat. Matches the primary's
+ * timing so the two move as a coordinated pair.
+ */
+function SecondaryCTA({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="group/btn inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white/90 px-5 py-2.5 text-[13.5px] font-semibold text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-all duration-200 ease-out hover:-translate-y-px hover:border-zinc-400 hover:bg-white hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] active:translate-y-0 active:shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -206,14 +254,14 @@ function Feature({
 }) {
   return (
     <div
-      className="lp-fade-in-up group relative rounded-xl border border-zinc-200/70 bg-white/70 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.08)] sm:p-6"
+      className="lp-fade-in-up group relative rounded-xl border border-zinc-200/70 bg-white/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_1px_3px_rgba(0,0,0,0.03),0_4px_12px_-4px_rgba(0,0,0,0.06)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-zinc-300/90 hover:bg-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_-2px_rgba(0,0,0,0.06),0_24px_48px_-12px_rgba(0,0,0,0.12)] sm:p-6"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center gap-2.5">
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
           {eyebrow}
         </p>
-        <span className="h-px flex-1 bg-zinc-200/80" />
+        <span className="h-px flex-1 bg-zinc-200/80 transition-colors duration-300 group-hover:bg-zinc-300" />
       </div>
       <h3 className="mt-3 font-display text-[18px] font-normal tracking-tight text-zinc-900">
         {title}
@@ -221,6 +269,30 @@ function Feature({
       <p className="mt-2 text-[13.5px] leading-relaxed text-zinc-600">
         {body}
       </p>
+    </div>
+  );
+}
+
+function DocType({
+  icon,
+  label,
+  delay,
+}: {
+  icon:  React.ReactNode;
+  label: string;
+  delay: number;
+}) {
+  return (
+    <div
+      className="lp-fade-in-up group flex items-center gap-3 rounded-lg border border-zinc-200/70 bg-white/70 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)]"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-zinc-900 group-hover:text-white">
+        {icon}
+      </div>
+      <span className="text-[13px] font-medium leading-snug text-zinc-800">
+        {label}
+      </span>
     </div>
   );
 }
