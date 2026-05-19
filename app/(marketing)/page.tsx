@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
 import { Reveal } from "@/components/marketing/reveal";
+import { DocType } from "@/components/marketing/doc-type";
+import { FeatureCard } from "@/components/marketing/feature-card";
 
 export default function LandingPage() {
   return (
@@ -8,13 +10,8 @@ export default function LandingPage() {
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative isolate -mx-6 overflow-hidden px-6 py-16 sm:py-24">
-
-        {/* Client atmosphere — cursor parallax across dot grid, bloom,
-            glass plane, and floating cards. Bails on touch / reduced-motion. */}
         <HeroAtmosphere />
 
-        {/* Hero content — mount-time staggered fade-in (user is here at load,
-            so we want this to animate immediately, not on scroll). */}
         <div className="mx-auto max-w-3xl text-center">
           <p
             className="lp-fade-in-up mb-5 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500 backdrop-blur-sm"
@@ -53,14 +50,102 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Feature blocks — scroll-triggered cascade (0 / 100 / 200 ms) ─── */}
+      {/* ── Feature blocks ──────────────────────────────────────────────── */}
       <section className="mx-auto mt-12 grid max-w-4xl gap-5 sm:mt-20 sm:grid-cols-3 sm:gap-6">
-        <Reveal delay={0}>   <Feature eyebrow="01" title="Extract what matters"  body="Deadlines, action items, risks, and open questions — pulled from the document with sources you can verify." /></Reveal>
-        <Reveal delay={100}> <Feature eyebrow="02" title="Plan the next step"    body="A grounded, document-specific action plan, with each step expandable for context." /></Reveal>
-        <Reveal delay={200}> <Feature eyebrow="03" title="Draft your response"   body="Generate an email, letter, or talking points. Edit. Approve. Use." /></Reveal>
+        <Reveal delay={0}>   <FeatureCard eyebrow="01" title="Extract what matters"  body="Deadlines, action items, risks, and open questions — pulled from the document with sources you can verify." /></Reveal>
+        <Reveal delay={100}> <FeatureCard eyebrow="02" title="Plan the next step"    body="A grounded, document-specific action plan, with each step expandable for context." /></Reveal>
+        <Reveal delay={200}> <FeatureCard eyebrow="03" title="Draft your response"   body="Generate an email, letter, or talking points. Edit. Approve. Use." /></Reveal>
       </section>
 
-      {/* ── Document types — heading reveals first, then tiles cascade ───── */}
+      {/* ── Mission / ethos — the emotional center of the page.
+            Single section-level Reveal: the whole block fades in as
+            one unit when it enters the viewport, instead of staggering
+            three sub-elements that read to the eye as "all at once."
+            Shares its layout system with the proof section below:
+            text-center, eyebrow + display headline + max-w-xl mx-auto
+            body, identical supporting-text treatment (zinc-600,
+            leading-relaxed, text-balance). */}
+      <Reveal>
+        <section className="mx-auto mt-20 max-w-3xl px-2 text-center sm:mt-28">
+          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            What we believe
+          </p>
+          <h2 className="mt-5 text-balance font-display text-[34px] font-normal leading-[1.15] tracking-[-0.015em] text-zinc-900 sm:text-[46px]">
+            &ldquo;Paperwork shouldn&rsquo;t be where opportunity gets lost.&rdquo;
+          </h2>
+          <p className="mx-auto mt-7 max-w-xl text-balance text-[15px] leading-relaxed text-zinc-600 sm:text-[16px]">
+            Navigating important systems shouldn&rsquo;t require insider knowledge.
+            ActionPlan makes complex documents clearer and more actionable
+            without replacing the judgment of the person reading them.
+          </p>
+        </section>
+      </Reveal>
+
+      {/* Subtle separator between mission and proof — short centered
+          hairline. Restrained, not decorative. Adds a beat of
+          separation without breaking the conceptual link between the
+          two sections. Spacing is split (mt-10/14 above, mt-10/14
+          below) so the total mission→proof gap stays close to the
+          original mt-20/28 — the line takes the beat, not adds to it. */}
+      <div
+        aria-hidden="true"
+        className="mx-auto mt-10 h-px w-20 bg-zinc-200 sm:mt-14"
+      />
+
+      {/* ── Proof at scale — shares the mission's layout system:
+            text-center, eyebrow + display statement + supporting
+            framing line in identical typography. Figures sit directly
+            on the page, no card or bordered surface — the section
+            statement above carries the visual anchor, the numbers
+            anchor themselves through size, tracking, and breath.
+            Single section-level Reveal so the section enters view as
+            one unit. */}
+      <Reveal>
+        <section className="mx-auto mt-10 max-w-2xl px-2 text-center sm:mt-14">
+          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            At scale
+          </p>
+          <h2 className="mx-auto mt-5 max-w-2xl text-balance font-display text-[24px] font-normal leading-[1.25] tracking-[-0.01em] text-zinc-900 sm:text-[30px]">
+            Administrative friction is one of the largest hidden costs in modern systems.
+          </h2>
+
+          {/* Figures — wrapped in an explicit max-w-xl inner frame
+              (~96px narrower than the section), centered, with smaller
+              gap and figure sizes that physically fit the tighter
+              frame. The grid no longer spreads across the section
+              width — the stats sit as a compact centered group. */}
+          <div className="mx-auto mt-14 max-w-xl sm:mt-16">
+            <div className="grid gap-10 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10">
+              <div>
+                <div className="font-display text-[40px] font-normal leading-[1] tracking-[-0.02em] text-zinc-900 sm:text-[48px] md:text-[52px]">
+                  $600B&ndash;$1T
+                </div>
+                <div className="mx-auto mt-4 max-w-[15rem] text-balance text-[14px] font-semibold leading-relaxed text-zinc-800 sm:text-[14.5px]">
+                  annual U.S. healthcare administrative cost
+                </div>
+              </div>
+              <div>
+                <div className="font-display text-[40px] font-normal leading-[1] tracking-[-0.02em] text-zinc-900 sm:text-[48px] md:text-[52px]">
+                  15&ndash;25%
+                </div>
+                <div className="mx-auto mt-4 max-w-[15rem] text-balance text-[14px] font-semibold leading-relaxed text-zinc-800 sm:text-[14.5px]">
+                  of total U.S. healthcare spending
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="mx-auto mt-14 max-w-xl text-balance text-[15px] font-medium leading-relaxed text-zinc-700 sm:mt-16 sm:text-[16px]">
+            Healthcare is the most clearly quantified example.
+            <br />
+            The same pattern repeats wherever dense paperwork stands between
+            people and outcomes, from housing and finance to immigration and
+            benefits.
+          </p>
+        </section>
+      </Reveal>
+
+      {/* ── Document types — cursor-spotlight tiles ─────────────────────── */}
       <section className="mx-auto mt-20 max-w-4xl sm:mt-28">
         <Reveal delay={0}>
           <div className="mb-8 text-center">
@@ -143,38 +228,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Audience — single reveal on scroll ──────────────────────────── */}
-      <Reveal>
-        <section className="mx-auto mt-20 max-w-3xl rounded-2xl border border-zinc-200 bg-zinc-50/60 px-6 py-8 sm:mt-28 sm:px-10">
-          <p className="text-center font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-            Built for
-          </p>
-          <div className="mt-5 grid gap-6 sm:grid-cols-2 sm:gap-10">
-            <div>
-              <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
-                Individuals
-              </p>
-              <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
-                Students, tenants, patients, and applicants navigating a dense
-                document on their own — admissions letters, lease addenda,
-                medical notices, insurance forms.
-              </p>
-            </div>
-            <div>
-              <p className="font-display text-[16px] font-normal tracking-tight text-zinc-900">
-                Teams &amp; organizations
-              </p>
-              <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-600">
-                Financial aid offices, advising programs, social services, and
-                pilot partners handling these documents at scale — with shared
-                context and trial-friendly access codes.
-              </p>
-            </div>
-          </div>
-        </section>
-      </Reveal>
-
-      {/* ── Final CTA — single reveal on scroll ─────────────────────────── */}
+      {/* ── Final CTA ───────────────────────────────────────────────────── */}
       <Reveal>
         <section className="mx-auto mt-20 max-w-2xl pb-20 text-center sm:mt-28">
           <h2 className="font-display text-[28px] font-normal tracking-[-0.01em] text-zinc-900 sm:text-[34px]">
@@ -195,16 +249,25 @@ export default function LandingPage() {
 
 // ─── Reusable building blocks ────────────────────────────────────────────
 
+/**
+ * Primary filled-black CTA. Final polish:
+ *   - explicit transition properties (avoid `transition-all` cost)
+ *   - cubic-bezier matching the reveal animations for visual cohesion
+ *   - inset top highlight slightly stronger for more dimensional presence
+ *   - active:scale-[0.99] for a real tactile press
+ *   - focus-visible ring for keyboard accessibility + visual finish
+ *   - arrow translates right on hover for the "pulling" feel
+ */
 function PrimaryCTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      className="group/btn inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-[13.5px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.10),0_4px_12px_-4px_rgba(0,0,0,0.20)] transition-all duration-200 ease-out hover:-translate-y-px hover:bg-zinc-800 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_2px_4px_rgba(0,0,0,0.12),0_8px_24px_-6px_rgba(0,0,0,0.25)] active:translate-y-0 active:bg-zinc-900 active:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_1px_2px_rgba(0,0,0,0.10)]"
+      className="group/btn inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-[13.5px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_1px_2px_rgba(0,0,0,0.10),0_4px_12px_-4px_rgba(0,0,0,0.20)] transition-[transform,box-shadow,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px hover:bg-zinc-800 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_2px_4px_rgba(0,0,0,0.12),0_8px_24px_-6px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.99] active:bg-zinc-900 active:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_1px_2px_rgba(0,0,0,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/40 focus-visible:ring-offset-2"
     >
       {children}
       <span
         aria-hidden="true"
-        className="transition-transform duration-200 ease-out group-hover/btn:translate-x-0.5"
+        className="transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/btn:translate-x-0.5"
       >→</span>
     </Link>
   );
@@ -214,55 +277,10 @@ function SecondaryCTA({ href, children }: { href: string; children: React.ReactN
   return (
     <Link
       href={href}
-      className="group/btn inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white/90 px-5 py-2.5 text-[13.5px] font-semibold text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-all duration-200 ease-out hover:-translate-y-px hover:border-zinc-400 hover:bg-white hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] active:translate-y-0 active:shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+      className="group/btn inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white/90 px-5 py-2.5 text-[13.5px] font-semibold text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-[transform,box-shadow,border-color,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px hover:border-zinc-400 hover:bg-white hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] active:translate-y-0 active:scale-[0.99] active:shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
     >
       {children}
     </Link>
   );
 }
 
-function Feature({
-  eyebrow,
-  title,
-  body,
-}: {
-  eyebrow: string;
-  title:   string;
-  body:    string;
-}) {
-  return (
-    <div className="group relative h-full rounded-xl border border-zinc-200/70 bg-white/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_1px_3px_rgba(0,0,0,0.03),0_4px_12px_-4px_rgba(0,0,0,0.06)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-zinc-300/90 hover:bg-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_-2px_rgba(0,0,0,0.06),0_24px_48px_-12px_rgba(0,0,0,0.12)] sm:p-6">
-      <div className="flex items-center gap-2.5">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
-          {eyebrow}
-        </p>
-        <span className="h-px flex-1 bg-zinc-200/80 transition-colors duration-300 group-hover:bg-zinc-300" />
-      </div>
-      <h3 className="mt-3 font-display text-[18px] font-normal tracking-tight text-zinc-900">
-        {title}
-      </h3>
-      <p className="mt-2 text-[13.5px] leading-relaxed text-zinc-600">
-        {body}
-      </p>
-    </div>
-  );
-}
-
-function DocType({
-  icon,
-  label,
-}: {
-  icon:  React.ReactNode;
-  label: string;
-}) {
-  return (
-    <div className="group flex h-full items-center gap-3 rounded-lg border border-zinc-200/70 bg-white/70 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)]">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-zinc-900 group-hover:text-white">
-        {icon}
-      </div>
-      <span className="text-[13px] font-medium leading-snug text-zinc-800">
-        {label}
-      </span>
-    </div>
-  );
-}

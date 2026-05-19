@@ -99,6 +99,34 @@ body {
           mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
 }
 
+/* Lenis smooth-scroll base CSS — required by the marketing-only Lenis
+ * instance mounted by <SmoothScrollController />. Lenis adds the
+ * `lenis` class to <html> while active and removes it on destroy, so
+ * these rules only apply on marketing routes. They cleanly revert on
+ * navigation into /app/*. The `scroll-behavior: auto` override is
+ * important: CSS smooth-scroll fights Lenis's RAF-driven smoothing
+ * and produces visible jitter when both run together. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lp-fade-in-up,
   .lp-drift-a,

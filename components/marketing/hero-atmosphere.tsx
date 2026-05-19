@@ -70,6 +70,16 @@ export function HeroAtmosphere() {
       const y = (e.clientY - rect.top  - rect.height / 2) / rect.height;
       target.x = Math.max(-0.6, Math.min(0.6, x));
       target.y = Math.max(-0.6, Math.min(0.6, y));
+
+      // Raw cursor position as a percentage within the hero, written
+      // straight to CSS variables. The spotlight layer below uses these
+      // to anchor its radial gradient — no lerp, because a spotlight
+      // should sit exactly where the cursor is. The parallax layers
+      // still use the lerped `current` values for soft trailing motion.
+      const mxPercent = ((e.clientX - rect.left) / rect.width)  * 100;
+      const myPercent = ((e.clientY - rect.top)  / rect.height) * 100;
+      container.style.setProperty("--hero-mx", `${mxPercent}%`);
+      container.style.setProperty("--hero-my", `${myPercent}%`);
     };
 
     const tick = () => {
@@ -117,6 +127,21 @@ export function HeroAtmosphere() {
     >
       {/* Layer 1 — dot grid (static, no parallax) */}
       <div className="lp-dot-grid absolute inset-0 opacity-70" />
+
+      {/* Layer 1.5 — hero-local cursor spotlight. Tracks raw cursor
+            position via CSS variables on the container; sits behind
+            the bloom so the bloom still dominates the center while
+            the spotlight adds movement at the periphery. Scoped
+            entirely to the hero — the parent atmosphere is at -z-10
+            so this layer is physically incapable of muddying any
+            section below. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(540px circle at var(--hero-mx, 50%) var(--hero-my, 50%), rgba(125, 100, 200, 0.12), transparent 60%)",
+        }}
+      />
 
       {/* Layer 2 — soft radial bloom, small parallax */}
       <div ref={bloomRef} className="absolute inset-0 will-change-transform">
