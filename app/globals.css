@@ -59,14 +59,18 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Base rotations are opposing (-3° vs +2°) so the two cards read as
+ * separate physical objects, not aligned shapes. rotateY adds a tiny
+ * 3D parallax tilt at the midpoint when combined with `perspective` on
+ * the parent. translate3d enables GPU compositing for smoother loops. */
 @keyframes lp-drift-a {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50%      { transform: translate(18px, -14px) rotate(2deg); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg) rotateY(0deg); }
+  50%      { transform: translate3d(18px, -14px, 0) rotate(-1deg) rotateY(3deg); }
 }
 
 @keyframes lp-drift-b {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50%      { transform: translate(-22px, 16px) rotate(-2deg); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(2deg) rotateY(0deg); }
+  50%      { transform: translate3d(-22px, 16px, 0) rotate(4deg) rotateY(-3deg); }
 }
 
 @keyframes lp-glow-pulse {
