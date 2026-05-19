@@ -29,7 +29,11 @@ import Lenis from "lenis";
 export function SmoothScrollController() {
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // eslint-disable-next-line no-console
+      console.log("[SmoothScroll] prefers-reduced-motion — Lenis not initialized");
+      return;
+    }
 
     const lenis = new Lenis({
       // `lerp` controls the natural smoothing applied to wheel/trackpad
@@ -46,6 +50,23 @@ export function SmoothScrollController() {
       syncTouch: false,
     });
 
+    // Temporary debug instrumentation — verify in browser DevTools:
+    //   • Console shows "[SmoothScroll] Lenis mounted" with htmlClasses
+    //     and hasLenisClass payload
+    //   • `hasLenisClass: true` confirms Lenis successfully attached
+    //     its `lenis` / `lenis-smooth` classes to <html>
+    //   • `window.__lenis` returns the Lenis instance object
+    //   • Navigating to /app/* logs "[SmoothScroll] Lenis destroyed"
+    //     and the html classes + window.__lenis go away
+    const html = document.documentElement;
+    // eslint-disable-next-line no-console
+    console.log("[SmoothScroll] Lenis mounted", {
+      lenis,
+      htmlClasses:   html.className,
+      hasLenisClass: html.classList.contains("lenis"),
+    });
+    (window as Window & { __lenis?: Lenis }).__lenis = lenis;
+
     let rafId = 0;
     function raf(time: number) {
       lenis.raf(time);
@@ -54,8 +75,11 @@ export function SmoothScrollController() {
     rafId = requestAnimationFrame(raf);
 
     return () => {
+      // eslint-disable-next-line no-console
+      console.log("[SmoothScroll] Lenis destroyed");
       cancelAnimationFrame(rafId);
       lenis.destroy();
+      (window as Window & { __lenis?: Lenis }).__lenis = undefined;
     };
   }, []);
 

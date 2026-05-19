@@ -17,10 +17,20 @@ type Props = {
  * user scrolls back and forth. Honors prefers-reduced-motion by showing
  * the final state immediately with no transition.
  *
- * Use this for below-the-fold sections so the motion resolves *as the
- * user scrolls to it*, instead of all firing on initial mount (where
- * nobody sees it). Hero elements continue to use the mount-time
- * `lp-fade-in-up` cascade because they're already on screen at load.
+ * Behavior:
+ *  - Element already in viewport at mount → IntersectionObserver fires
+ *    synchronously on `observe()` and the element animates in immediately.
+ *    This is what makes features (which peek into the first viewport) and
+ *    other above-the-fold elements visible at first load.
+ *  - Element below the fold at mount → observer waits until the element
+ *    actually scrolls into view, then animates it in. Mission / proof /
+ *    document types / final CTA all live below the fold and animate as
+ *    the user scrolls down to them.
+ *
+ * The previous "wait for first scroll" wrapper was holding in-viewport
+ * elements at opacity:0 until the user scrolled, which made the page
+ * look empty on first load even when the feature row was positioned to
+ * peek above the fold. Removed.
  */
 export function Reveal({ children, delay = 0, className = "" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -29,7 +39,6 @@ export function Reveal({ children, delay = 0, className = "" }: Props) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Reduced-motion users see the final state immediately.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setVisible(true);
       return;

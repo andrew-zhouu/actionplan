@@ -8,13 +8,26 @@ export default function LandingPage() {
   return (
     <div className="mx-auto w-full max-w-5xl px-6">
 
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="relative isolate -mx-6 overflow-hidden px-6 py-16 sm:py-24">
+      {/* ── Hero ──────────────────────────────────────────────────────────
+            `overflow-hidden` removed so the cursor spotlight (now a
+            direct sibling of HeroAtmosphere below) can extend cleanly
+            past the page wrapper's max-width. `py-8 sm:py-14` (was
+            py-12 sm:py-20) trims the vertical footprint enough that
+            the features row clearly peeks above the fold on typical
+            laptop viewports. Internal hero spacing also tightened a
+            notch on the same theme. */}
+      <section className="relative isolate -mx-6 mt-20 px-6 py-6 sm:mt-28 sm:py-12">
+        {/* (The previous full-bleed cursor spotlight was removed —
+            the cursor-reactive light now lives INSIDE the glass plane
+            in HeroAtmosphere, geometrically clipped to the plane's
+            rounded-rectangle bounds so the effect belongs to the
+            card surface and never spills outside it.) */}
+
         <HeroAtmosphere />
 
         <div className="mx-auto max-w-3xl text-center">
           <p
-            className="lp-fade-in-up mb-5 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500 backdrop-blur-sm"
+            className="lp-fade-in-up mb-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500 backdrop-blur-sm"
             style={{ animationDelay: "0ms" }}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -27,7 +40,7 @@ export default function LandingPage() {
             Turn confusing documents into clear next steps.
           </h1>
           <p
-            className="lp-fade-in-up mx-auto mt-6 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-[17px]"
+            className="lp-fade-in-up mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-[17px]"
             style={{ animationDelay: "240ms" }}
           >
             Drop in a lease, scholarship letter, financial form, or any dense
@@ -35,14 +48,14 @@ export default function LandingPage() {
             drafts a response you can review.
           </p>
           <div
-            className="lp-fade-in-up mt-9 flex flex-wrap items-center justify-center gap-3"
+            className="lp-fade-in-up mt-5 flex flex-wrap items-center justify-center gap-3"
             style={{ animationDelay: "360ms" }}
           >
             <PrimaryCTA href="/early-access">Get early access</PrimaryCTA>
             <SecondaryCTA href="/demo">See the demo</SecondaryCTA>
           </div>
           <p
-            className="lp-fade-in-up mt-6 text-[12px] text-zinc-400"
+            className="lp-fade-in-up mt-4 text-[12px] text-zinc-400"
             style={{ animationDelay: "480ms" }}
           >
             Currently in early access. General availability coming soon.
@@ -50,8 +63,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Feature blocks ──────────────────────────────────────────────── */}
-      <section className="mx-auto mt-12 grid max-w-4xl gap-5 sm:mt-20 sm:grid-cols-3 sm:gap-6">
+      {/* ── Feature blocks ────────────────────────────────────────────────
+            `mt-24 sm:mt-32` — a clearly perceptible breathing gap
+            from the hero card. Tuned after `mt-14 sm:mt-16` still
+            read as too close. The top of this row should still peek
+            into the first viewport on a typical laptop. */}
+      <section className="mx-auto mt-24 grid max-w-4xl gap-5 sm:mt-32 sm:grid-cols-3 sm:gap-6">
         <Reveal delay={0}>   <FeatureCard eyebrow="01" title="Extract what matters"  body="Deadlines, action items, risks, and open questions — pulled from the document with sources you can verify." /></Reveal>
         <Reveal delay={100}> <FeatureCard eyebrow="02" title="Plan the next step"    body="A grounded, document-specific action plan, with each step expandable for context." /></Reveal>
         <Reveal delay={200}> <FeatureCard eyebrow="03" title="Draft your response"   body="Generate an email, letter, or talking points. Edit. Approve. Use." /></Reveal>
@@ -66,7 +83,7 @@ export default function LandingPage() {
             body, identical supporting-text treatment (zinc-600,
             leading-relaxed, text-balance). */}
       <Reveal>
-        <section className="mx-auto mt-20 max-w-3xl px-2 text-center sm:mt-28">
+        <section className="mx-auto mt-28 max-w-3xl px-2 text-center sm:mt-36">
           <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
             What we believe
           </p>
