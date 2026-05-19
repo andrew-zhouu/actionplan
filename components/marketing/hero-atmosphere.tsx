@@ -71,15 +71,19 @@ export function HeroAtmosphere() {
       target.x = Math.max(-0.6, Math.min(0.6, x));
       target.y = Math.max(-0.6, Math.min(0.6, y));
 
-      // Raw cursor position as a percentage within the hero, written
-      // straight to CSS variables. The spotlight layer below uses these
-      // to anchor its radial gradient — no lerp, because a spotlight
-      // should sit exactly where the cursor is. The parallax layers
-      // still use the lerped `current` values for soft trailing motion.
-      const mxPercent = ((e.clientX - rect.left) / rect.width)  * 100;
-      const myPercent = ((e.clientY - rect.top)  / rect.height) * 100;
-      container.style.setProperty("--hero-mx", `${mxPercent}%`);
-      container.style.setProperty("--hero-my", `${myPercent}%`);
+      // Cursor position in plane-LOCAL pixels for the spotlight that
+      // now lives INSIDE the glass plane (clipped by the plane's
+      // rounded-rectangle via overflow-hidden). When the cursor is
+      // over the plane these are positive in-bounds values; when it's
+      // outside they go negative / past the plane's width-height, and
+      // the gradient draws off-plane (and gets clipped to nothing).
+      const plane = planeRef.current;
+      if (plane) {
+        const planeRect = plane.getBoundingClientRect();
+        const html = document.documentElement;
+        html.style.setProperty("--plane-mx", `${e.clientX - planeRect.left}px`);
+        html.style.setProperty("--plane-my", `${e.clientY - planeRect.top}px`);
+      }
     };
 
     const tick = () => {
@@ -128,20 +132,11 @@ export function HeroAtmosphere() {
       {/* Layer 1 — dot grid (static, no parallax) */}
       <div className="lp-dot-grid absolute inset-0 opacity-70" />
 
-      {/* Layer 1.5 — hero-local cursor spotlight. Tracks raw cursor
-            position via CSS variables on the container; sits behind
-            the bloom so the bloom still dominates the center while
-            the spotlight adds movement at the periphery. Scoped
-            entirely to the hero — the parent atmosphere is at -z-10
-            so this layer is physically incapable of muddying any
-            section below. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(540px circle at var(--hero-mx, 50%) var(--hero-my, 50%), rgba(125, 100, 200, 0.12), transparent 60%)",
-        }}
-      />
+      {/* (Cursor spotlight has been moved OUT of this component — it
+            now lives as a sibling of <HeroAtmosphere /> directly under
+            the hero section in page.tsx, so it doesn't sit under this
+            component's `perspective:1200px` rendering context that
+            was causing the visible side-clipping.) */}
 
       {/* Layer 2 — soft radial bloom, small parallax */}
       <div ref={bloomRef} className="absolute inset-0 will-change-transform">
@@ -152,12 +147,28 @@ export function HeroAtmosphere() {
       </div>
 
       {/* Layer 3 — glass stage, medium parallax. Outer div centers it;
-                    inner div is the parallax target. */}
+                    inner div is the parallax target.
+                    Now also OWNS the cursor-reactive light: the inner
+                    spotlight `<div>` lives as a child of the plane and
+                    the plane is `relative overflow-hidden` + rounded,
+                    so the spotlight gradient is geometrically clipped
+                    to the plane's exact rounded-rectangle bounds. The
+                    effect reads as belonging to the card surface
+                    itself — no spill outside the card. */}
       <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:block">
         <div
           ref={planeRef}
-          className="h-[440px] w-[860px] max-w-[92vw] rounded-[40px] border border-white/50 bg-white/25 shadow-[0_8px_40px_-20px_rgba(80,80,140,0.18),0_24px_80px_-32px_rgba(80,80,140,0.22)] backdrop-blur-md will-change-transform"
-        />
+          className="relative h-[440px] w-[860px] max-w-[92vw] overflow-hidden rounded-[40px] bg-white/20 shadow-[0_8px_40px_-20px_rgba(80,80,140,0.14),0_24px_80px_-32px_rgba(80,80,140,0.16)] backdrop-blur-md will-change-transform"
+        >
+          <div
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(360px circle at var(--plane-mx, 50%) var(--plane-my, 50%), rgba(125, 100, 200, 0.07), transparent 55%)",
+            }}
+          />
+        </div>
       </div>
 
       {/* Layer 4 — floating cards. Outer div positions, middle div carries

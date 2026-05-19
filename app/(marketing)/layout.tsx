@@ -14,7 +14,7 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col overflow-x-clip bg-white">
       {/* Scope smooth scroll to marketing routes only. Removes itself on
           unmount when the user navigates into /app/*. */}
       <SmoothScrollController />
