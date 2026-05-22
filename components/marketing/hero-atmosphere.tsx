@@ -126,7 +126,7 @@ export function HeroAtmosphere() {
   return (
     <div
       ref={containerRef}
-      className="pointer-events-none absolute inset-0 -z-10 [perspective:1200px]"
+      className="pointer-events-none absolute inset-0 -z-10"
       aria-hidden="true"
     >
       {/* Layer 1 — dot grid (static, no parallax) */}

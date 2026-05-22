@@ -60,17 +60,20 @@ body {
 }
 
 /* Base rotations are opposing (-3° vs +2°) so the two cards read as
- * separate physical objects, not aligned shapes. rotateY adds a tiny
- * 3D parallax tilt at the midpoint when combined with `perspective` on
- * the parent. translate3d enables GPU compositing for smoother loops. */
+ * separate physical objects, not aligned shapes. 2D-only transforms
+ * (translate + rotate around Z) — the previous `rotateY` was causing
+ * the cards to vanish entirely on some GPUs / browsers when combined
+ * with the parent's `perspective` (a known 3D-compositor failure
+ * mode). translate3d still triggers GPU compositing for smoother
+ * loops without requiring a 3D rendering context. */
 @keyframes lp-drift-a {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg) rotateY(0deg); }
-  50%      { transform: translate3d(18px, -14px, 0) rotate(-1deg) rotateY(3deg); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg); }
+  50%      { transform: translate3d(18px, -14px, 0) rotate(-1deg); }
 }
 
 @keyframes lp-drift-b {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(2deg) rotateY(0deg); }
-  50%      { transform: translate3d(-22px, 16px, 0) rotate(4deg) rotateY(-3deg); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(2deg); }
+  50%      { transform: translate3d(-22px, 16px, 0) rotate(4deg); }
 }
 
 @keyframes lp-glow-pulse {
