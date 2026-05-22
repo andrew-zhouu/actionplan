@@ -75,7 +75,7 @@ export default function LandingPage() {
             read as too close. The top of this row should still peek
             into the first viewport on a typical laptop. */}
       <section className="mx-auto mt-24 grid max-w-4xl gap-5 sm:mt-32 sm:grid-cols-3 sm:gap-6">
-        <Reveal delay={0}>   <FeatureCard eyebrow="01" title="Extract what matters"  body="Deadlines, action items, risks, and open questions — pulled from the document with sources you can verify." /></Reveal>
+        <Reveal delay={0}>   <FeatureCard eyebrow="01" title="Extract what matters"  body="Deadlines, action items, risks, and open questions pulled from the document, with sources you can verify." /></Reveal>
         <Reveal delay={100}> <FeatureCard eyebrow="02" title="Plan the next step"    body="A grounded, document-specific action plan, with each step expandable for context." /></Reveal>
         <Reveal delay={200}> <FeatureCard eyebrow="03" title="Draft your response"   body="Generate an email, letter, or talking points. Edit. Approve. Use." /></Reveal>
       </section>
