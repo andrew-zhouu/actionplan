@@ -12,8 +12,12 @@ export default function EarlyAccessPage() {
     <div className="mx-auto w-full max-w-md px-6 py-16 sm:py-24">
 
       <header className="mb-8">
-        <p className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        {/* Early-access kicker — editorial hairline + label.
+            Matches the marketing hero kicker exactly. Short zinc-300
+            hairline as a "start of section" cue, mono-uppercase
+            label, no dot / no border / no surface. */}
+        <p className="mb-5 inline-flex items-center gap-3 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-700">
+          <span aria-hidden="true" className="h-px w-6 bg-zinc-300" />
           Early access
         </p>
         <h1 className="font-display text-[32px] font-normal leading-tight tracking-[-0.01em] text-zinc-900 sm:text-[36px]">

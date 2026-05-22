@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SmoothScrollController } from "@/components/marketing/smooth-scroll-controller";
 
 /**
@@ -22,12 +23,23 @@ export default function MarketingLayout({
       {/* Header */}
       <header className="border-b border-zinc-100">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span
-              className="h-6 w-6 rounded-[6px]"
-              style={{ background: "var(--accent)" }}
+          <Link href="/" className="flex items-center gap-2" aria-label="ActionPlan home">
+            {/* Brand lockup — icon image + text wordmark.
+                `/actionplan-logo.png` is icon-only (284×289 PNG, no
+                wordmark inside the file), so the wordmark is rendered
+                as text alongside it. Intrinsic width/height match the
+                asset's natural dimensions to prevent layout shift.
+                `priority` because the brand is above the fold on every
+                marketing page. */}
+            <Image
+              src="/actionplan-logo.png"
+              alt=""
+              width={284}
+              height={289}
+              priority
+              className="h-7 w-auto"
             />
-            <span className="text-sm font-semibold tracking-tight text-zinc-900">
+            <span className="text-[15px] font-semibold tracking-tight text-zinc-900">
               ActionPlan
             </span>
           </Link>

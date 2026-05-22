@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 function IconInbox() {
@@ -78,13 +79,24 @@ export function Sidebar() {
           lives below in Inbox / Dashboard / Tasks / Calendar. */}
       <Link
         href="/"
-        className="flex items-center gap-2.5 px-4 py-[18px] transition-opacity hover:opacity-80"
+        aria-label="ActionPlan home"
+        className="flex items-center gap-2 px-5 pt-2 pb-4 transition-opacity hover:opacity-80"
       >
-        <div
-          className="h-6 w-6 rounded-[6px]"
-          style={{ background: "var(--accent)" }}
+        {/* Brand lockup — icon image + text wordmark. Sized to match
+            the marketing header (h-7 icon + text-[15px] wordmark)
+            for cross-context consistency. Row padding trimmed from
+            py-[18px] to py-3 so the lockup sits a touch higher in
+            the sidebar without being cramped against the New
+            document button below. */}
+        <Image
+          src="/actionplan-logo.png"
+          alt=""
+          width={284}
+          height={289}
+          priority
+          className="h-7 w-auto"
         />
-        <span className="text-sm font-semibold tracking-tight text-zinc-900">
+        <span className="translate-y-px text-[15px] font-semibold tracking-tight text-zinc-900">
           ActionPlan
         </span>
       </Link>
