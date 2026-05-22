@@ -127,7 +127,7 @@ export function EarlyAccessForm() {
             className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-[14px] text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200 disabled:opacity-50"
           />
           <p className="mt-2 text-[11.5px] text-zinc-500">
-            No email required — your access is tied to this browser session.
+            No email required. Your access is tied to this browser session.
           </p>
         </div>
       )}
@@ -159,8 +159,8 @@ export function EarlyAccessForm() {
             onClick={() => switchMode("code")}
             className="text-[12px] text-zinc-500 transition-colors hover:text-zinc-900"
           >
-            Have an organization access code?{" "}
-            <span className="font-medium text-zinc-700">Use a code →</span>
+            Have an access code?{" "}
+            <span className="font-medium text-zinc-700">Use it →</span>
           </button>
         ) : (
           <button

@@ -74,7 +74,21 @@ export default function MarketingLayout({
       {/* Footer */}
       <footer className="border-t border-zinc-100">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 text-[11.5px] text-zinc-400">
-          <span>© {new Date().getFullYear()} ActionPlan</span>
+          <div className="flex items-center gap-4">
+            <span>© {new Date().getFullYear()} ActionPlan</span>
+            <Link
+              href="/privacy"
+              className="transition-colors hover:text-zinc-700"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-zinc-700"
+            >
+              Terms
+            </Link>
+          </div>
           <span className="font-mono uppercase tracking-[0.1em]">Early access</span>
         </div>
       </footer>
