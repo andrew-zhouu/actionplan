@@ -26,11 +26,17 @@ export default function LandingPage() {
         <HeroAtmosphere />
 
         <div className="mx-auto max-w-3xl text-center">
+          {/* Early-access kicker — centered hero variant: text only.
+              No hairline here (the one-sided leading rule reads as
+              lopsided inside a centered composition; the /early-access
+              page's left-aligned variant keeps the hairline because
+              it's editorially correct there). Size, tracking, and
+              color stay nudged stronger than a pure section eyebrow
+              so the kicker still feels intentional rather than flat. */}
           <p
-            className="lp-fade-in-up mb-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-zinc-500 backdrop-blur-sm"
+            className="lp-fade-in-up mb-5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-700"
             style={{ animationDelay: "0ms" }}
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Early access
           </p>
           <h1
