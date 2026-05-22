@@ -49,9 +49,18 @@ export function HeroAtmosphere() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Respect reduced motion + skip on coarse pointers (touch)
+    // Respect reduced motion. For cursor parallax we check
+    // `(any-pointer: fine)` rather than `(pointer: fine)` so that
+    // hybrid touch laptops with a trackpad/mouse attached still get
+    // the parallax — they would otherwise read as "static cards on a
+    // desktop" because the OS reports their primary pointer as
+    // coarse. Pure-touch devices (no fine pointer at all) still skip.
+    //
+    // Important: this gate only affects the JS cursor parallax. It
+    // does NOT affect card visibility or the CSS drift animation —
+    // those are independent systems handled by class + globals.css.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (!window.matchMedia("(any-pointer: fine)").matches) return;
 
     const container = containerRef.current;
     if (!container) return;
@@ -174,10 +183,16 @@ export function HeroAtmosphere() {
       {/* Layer 4 — floating cards. Outer div positions, middle div carries
                     cursor parallax, inner div runs the autonomous drift
                     animation. Three layers so the transforms compose
-                    instead of overwriting each other. */}
-      <div className="absolute left-[8%] top-[18%] hidden sm:block">
+                    instead of overwriting each other.
+                    Visibility is intentionally NOT gated by viewport or
+                    pointer type. Cards render on every device. Mobile
+                    uses a smaller card size and a more subtle opacity so
+                    the cards read as ambient decoration without crowding
+                    the centered hero text; the larger desktop form kicks
+                    in at the `sm:` breakpoint. */}
+      <div className="absolute left-[4%] top-[6%] sm:left-[8%] sm:top-[18%]">
         <div ref={cardARef} className="will-change-transform">
-          <div className="lp-drift-a h-32 w-44 overflow-hidden rounded-xl border border-zinc-200/60 bg-white/80 opacity-80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05),0_20px_40px_-16px_rgba(0,0,0,0.10)] backdrop-blur-sm">
+          <div className="lp-drift-a h-24 w-32 overflow-hidden rounded-xl border border-zinc-200/60 bg-white/80 opacity-60 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05),0_20px_40px_-16px_rgba(0,0,0,0.10)] backdrop-blur-sm sm:h-32 sm:w-44 sm:opacity-80">
             <div className="flex h-full flex-col gap-1.5 p-3.5">
               <div className="h-1 w-3/5 rounded-full bg-zinc-300/70" />
               <div className="mt-1 h-0.5 w-full rounded-full bg-zinc-200/70" />
@@ -190,9 +205,9 @@ export function HeroAtmosphere() {
         </div>
       </div>
 
-      <div className="absolute right-[7%] top-[56%] hidden sm:block">
+      <div className="absolute right-[4%] top-[60%] sm:right-[7%] sm:top-[56%]">
         <div ref={cardBRef} className="will-change-transform">
-          <div className="lp-drift-b h-28 w-40 overflow-hidden rounded-xl border border-zinc-200/60 bg-white/80 opacity-80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05),0_20px_40px_-16px_rgba(0,0,0,0.10)] backdrop-blur-sm">
+          <div className="lp-drift-b h-20 w-28 overflow-hidden rounded-xl border border-zinc-200/60 bg-white/80 opacity-60 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05),0_20px_40px_-16px_rgba(0,0,0,0.10)] backdrop-blur-sm sm:h-28 sm:w-40 sm:opacity-80">
             <div className="flex h-full flex-col gap-2 p-3">
               <div className="flex items-center gap-1.5">
                 <div className="h-2 w-2 shrink-0 rounded-sm border border-zinc-300/80 bg-white/80" />
