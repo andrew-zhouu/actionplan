@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 
 function IconInbox() {
   return (
@@ -70,49 +71,25 @@ const NAV = [
   { key: "library",   label: "Library",   href: null,             Icon: IconLibrary },
 ] as const;
 
-export function Sidebar() {
-  const pathname = usePathname();
-
+function NavItems({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
   return (
-    <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      {/* Brand — site-level home (public landing). App-level navigation
-          lives below in Inbox / Dashboard / Tasks / Calendar. */}
-      <Link
-        href="/"
-        aria-label="ActionPlan home"
-        className="flex items-center gap-2 px-5 pt-2 pb-4 transition-opacity hover:opacity-80"
-      >
-        {/* Brand lockup — icon image + text wordmark. Sized to match
-            the marketing header (h-7 icon + text-[15px] wordmark)
-            for cross-context consistency. Row padding trimmed from
-            py-[18px] to py-3 so the lockup sits a touch higher in
-            the sidebar without being cramped against the New
-            document button below. */}
-        <Image
-          src="/actionplan-logo.png"
-          alt=""
-          width={284}
-          height={289}
-          priority
-          className="h-7 w-auto"
-        />
-        <span className="translate-y-px text-[15px] font-semibold tracking-tight text-zinc-900">
-          ActionPlan
-        </span>
-      </Link>
-
-      {/* New document */}
+    <>
       <div className="px-3 pb-3">
         <Link
           href="/app/new"
+          onClick={onNavigate}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
         >
           <IconPlus />
           New document
         </Link>
       </div>
-
-      {/* Nav */}
       <nav className="flex-1 space-y-0.5 px-2 pt-1">
         {NAV.map(({ key, label, href, Icon }) => {
           if (href === null) {
@@ -128,11 +105,13 @@ export function Sidebar() {
             );
           }
 
-          const isActive = pathname === href || (key === "inbox" && pathname === "/app/new");
+          const isActive =
+            pathname === href || (key === "inbox" && pathname === "/app/new");
           return (
             <Link
               key={key}
               href={href}
+              onClick={onNavigate}
               className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                 isActive
                   ? "bg-zinc-100 font-semibold text-zinc-900"
@@ -147,6 +126,145 @@ export function Sidebar() {
           );
         })}
       </nav>
-    </aside>
+    </>
+  );
+}
+
+function BrandLockup() {
+  return (
+    <Link
+      href="/"
+      aria-label="ActionPlan home"
+      className="flex items-center gap-2 px-5 pt-2 pb-4 transition-opacity hover:opacity-80"
+    >
+      <Image
+        src="/actionplan-logo.png"
+        alt=""
+        width={284}
+        height={289}
+        priority
+        className="h-7 w-auto"
+      />
+      <span className="translate-y-px text-[15px] font-semibold tracking-tight text-zinc-900">
+        ActionPlan
+      </span>
+    </Link>
+  );
+}
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
+
+  return (
+    <>
+      {/* ── Desktop sidebar (md+) ─────────────────────────────── */}
+      <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-white">
+        <BrandLockup />
+        <NavItems pathname={pathname} />
+      </aside>
+
+      {/* ── Mobile top bar (< md) ─────────────────────────────── */}
+      <header className="md:hidden flex items-center justify-between border-b border-zinc-200 bg-white px-4 h-14 shrink-0">
+        <Link
+          href="/"
+          aria-label="ActionPlan home"
+          className="flex items-center gap-2 transition-opacity hover:opacity-80"
+        >
+          <Image
+            src="/actionplan-logo.png"
+            alt=""
+            width={284}
+            height={289}
+            priority
+            className="h-7 w-auto"
+          />
+          <span className="translate-y-px text-[15px] font-semibold tracking-tight text-zinc-900">
+            ActionPlan
+          </span>
+        </Link>
+        <button
+          aria-label="Open navigation menu"
+          aria-expanded={drawerOpen}
+          onClick={() => setDrawerOpen(true)}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      </header>
+
+      {/* ── Mobile drawer backdrop ────────────────────────────── */}
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          aria-hidden="true"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile drawer panel ───────────────────────────────── */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-xl transition-transform duration-300 ease-in-out md:hidden ${
+          drawerOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-label="Navigation menu"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="flex items-center justify-between border-b border-zinc-100 px-4 h-14 shrink-0">
+          <Link
+            href="/"
+            aria-label="ActionPlan home"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <Image
+              src="/actionplan-logo.png"
+              alt=""
+              width={284}
+              height={289}
+              className="h-7 w-auto"
+            />
+            <span className="translate-y-px text-[15px] font-semibold tracking-tight text-zinc-900">
+              ActionPlan
+            </span>
+          </Link>
+          <button
+            aria-label="Close navigation menu"
+            onClick={() => setDrawerOpen(false)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex flex-1 flex-col overflow-y-auto pt-3">
+          <NavItems pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+        </div>
+      </div>
+    </>
   );
 }
