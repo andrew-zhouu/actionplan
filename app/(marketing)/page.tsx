@@ -57,14 +57,18 @@ export default function LandingPage() {
             className="lp-fade-in-up mt-5 flex flex-wrap items-center justify-center gap-3"
             style={{ animationDelay: "360ms" }}
           >
-            <PrimaryCTA href="/early-access">Get early access</PrimaryCTA>
-            <SecondaryCTA href="/demo">See the demo</SecondaryCTA>
+            <PrimaryCTA href="/early-access">Try ActionPlan</PrimaryCTA>
+            <SecondaryCTA href="/demo">View Demo</SecondaryCTA>
           </div>
           <p
-            className="lp-fade-in-up mt-4 text-[12px] text-zinc-400"
+            className="lp-fade-in-up mx-auto mt-4 max-w-xl text-[12px] leading-relaxed text-zinc-500"
             style={{ animationDelay: "480ms" }}
           >
-            Currently in early access. General availability coming soon.
+            <span className="font-medium text-zinc-700">Try ActionPlan</span>{" "}
+            to use the real app on your own documents&mdash;access starts as
+            soon as you enter your email.{" "}
+            <span className="font-medium text-zinc-700">View Demo</span> to
+            explore a fixed sample.
           </p>
         </div>
       </section>
@@ -258,11 +262,12 @@ export default function LandingPage() {
             Try it on a real document.
           </h2>
           <p className="mt-3 text-[14px] leading-relaxed text-zinc-600">
-            The demo is fixed and shareable. Get early access to try it on your own document.
+            Try ActionPlan on your own document with immediate access, or view
+            the demo to explore a fixed sample first.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <PrimaryCTA href="/early-access">Get early access</PrimaryCTA>
-            <SecondaryCTA href="/demo">See the demo</SecondaryCTA>
+            <PrimaryCTA href="/early-access">Try ActionPlan</PrimaryCTA>
+            <SecondaryCTA href="/demo">View Demo</SecondaryCTA>
           </div>
         </section>
       </Reveal>
