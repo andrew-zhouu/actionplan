@@ -95,7 +95,7 @@ export function EarlyAccessForm() {
       {mode === "email" ? (
         <div>
           <label htmlFor="email" className="block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-            Email
+            Email address
           </label>
           <input
             id="email"
@@ -144,9 +144,9 @@ export function EarlyAccessForm() {
         className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
       >
         {submitting
-          ? "Continuing…"
+          ? mode === "email" ? "Starting ActionPlan…" : "Continuing…"
           : mode === "email"
-          ? "Continue →"
+          ? "Start using ActionPlan →"
           : "Continue with code →"}
       </button>
 

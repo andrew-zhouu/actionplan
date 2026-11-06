@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { EarlyAccessForm } from "@/components/early-access/early-access-form";
 
 export const metadata: Metadata = {
-  title:       "Early access · ActionPlan",
-  description: "Enter your email to use ActionPlan on your own documents.",
+  title:       "Try ActionPlan",
+  description: "Enter your email to start using ActionPlan with your own documents. You'll get access immediately — no invitation code needed.",
 };
 
 export default function EarlyAccessPage() {
@@ -21,13 +21,14 @@ export default function EarlyAccessPage() {
           Early access
         </p>
         <h1 className="font-display text-[32px] font-normal leading-tight tracking-[-0.01em] text-zinc-900 sm:text-[36px]">
-          Get early access
+          Try ActionPlan
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-zinc-600">
-          Enter your email to use ActionPlan on your own documents.
+          Enter your email to start using ActionPlan with your own documents.
+          You&apos;ll get access immediately&mdash;no invitation code needed.
         </p>
         <p className="mt-2 text-[12.5px] leading-relaxed text-zinc-500">
-          Already used ActionPlan? Enter the same email to continue where you left off.
+          Already used ActionPlan? Enter the same email to pick up where you left off.
         </p>
       </header>
 
@@ -35,11 +36,6 @@ export default function EarlyAccessPage() {
       <Suspense fallback={null}>
         <EarlyAccessForm />
       </Suspense>
-
-      <p className="mt-8 text-[11.5px] leading-relaxed text-zinc-400">
-        ActionPlan is in early access. We&apos;ll let you know when general
-        access opens.
-      </p>
     </div>
   );
 }
