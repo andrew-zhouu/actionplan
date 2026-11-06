@@ -52,13 +52,13 @@ export default function MarketingLayout({
               href="/demo"
               className="inline-flex items-center rounded-md border border-zinc-200 bg-white/60 px-3 py-1.5 text-[12.5px] font-medium text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] backdrop-blur-sm transition-[transform,box-shadow,border-color,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px hover:border-zinc-300 hover:bg-white hover:shadow-[0_2px_6px_-1px_rgba(0,0,0,0.06)] active:translate-y-0 active:scale-[0.99] active:shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
             >
-              Demo
+              View Demo
             </Link>
             <Link
               href="/early-access"
               className="group/btn inline-flex items-center gap-1.5 rounded-md bg-zinc-900 px-3 py-1.5 text-[12.5px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.12)] transition-[transform,box-shadow,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px hover:bg-zinc-800 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_2px_4px_rgba(0,0,0,0.10),0_4px_12px_-3px_rgba(0,0,0,0.16)] active:translate-y-0 active:scale-[0.99] active:bg-zinc-900 active:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_1px_2px_rgba(0,0,0,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/40 focus-visible:ring-offset-2"
             >
-              Get early access
+              Try ActionPlan
               <span
                 aria-hidden="true"
                 className="transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/btn:translate-x-0.5"
