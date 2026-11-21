@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import {
@@ -8,6 +8,8 @@ import {
   taskCompletions,
   taskPlans,
   taskDrafts,
+  documentChunks,
+  documentIndexes,
 } from "@/lib/db/schema";
 import { assertOwnsDocument } from "@/lib/auth/ownership";
 
@@ -35,6 +37,10 @@ export async function deleteDocument(id: string) {
   const { userId } = await assertOwnsDocument(id);
 
   await db.transaction(async (tx) => {
+    // Keep existing deletion working during rollout, before the additive RAG migration.
+    const ragTables = new Set((await tx.all<{ name: string }>(sql`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('document_chunks', 'document_indexes')`)).map(r => r.name));
+    if (ragTables.has("document_chunks")) await tx.delete(documentChunks).where(and(eq(documentChunks.documentId, id), eq(documentChunks.userId, userId)));
+    if (ragTables.has("document_indexes")) await tx.delete(documentIndexes).where(and(eq(documentIndexes.documentId, id), eq(documentIndexes.userId, userId)));
     await tx.delete(taskCompletions).where(eq(taskCompletions.documentId, id));
     await tx.delete(taskPlans).where(eq(taskPlans.documentId, id));
     await tx.delete(taskDrafts).where(eq(taskDrafts.documentId, id));
@@ -45,4 +51,5 @@ export async function deleteDocument(id: string) {
 
   revalidatePath("/app");
   revalidatePath("/app/tasks");
+  revalidatePath("/app/ask");
 }
