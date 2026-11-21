@@ -63,7 +63,7 @@ export function AskDocuments({ documents, initialDocumentId, available }: {
               className="h-4 w-4 accent-zinc-900" />
             <span className="min-w-0 flex-1 truncate text-sm text-zinc-800">{doc.title}</span>
             <span className="text-xs text-zinc-400">{doc.date}</span>
-            <Link href={`/app/docs/${encodeURIComponent(doc.id)}`} className="text-xs text-zinc-500 underline underline-offset-2">Open</Link>
+            <Link href={`/app/docs/${encodeURIComponent(doc.id)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-500 underline underline-offset-2">Open</Link>
           </label>)}
         </div>
       </fieldset>
@@ -91,7 +91,7 @@ export function AskDocuments({ documents, initialDocumentId, available }: {
             <div className="mt-3 space-y-2">{claim.citations.map((cite, j) => <details key={`${cite.sourceId}-${j}`} className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
               <summary className="cursor-pointer text-xs font-medium text-zinc-600">{cite.documentTitle} · source {cite.sourceId.slice(1)}</summary>
               <blockquote className="mt-3 whitespace-pre-wrap border-l-2 border-zinc-300 pl-3 text-sm leading-6 text-zinc-600">{cite.quote}</blockquote>
-              <Link href={`/app/docs/${encodeURIComponent(cite.documentId)}`} className="mt-3 inline-block text-xs font-medium text-zinc-700 underline underline-offset-2">Open original document →</Link>
+              <Link href={`/app/docs/${encodeURIComponent(cite.documentId)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-medium text-zinc-700 underline underline-offset-2">Open original document (new tab) ↗</Link>
             </details>)}</div>
           </div>)}
         </div>}
