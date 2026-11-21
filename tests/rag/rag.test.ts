@@ -25,7 +25,18 @@ async function setup() {
 }
 
 const testDirectories: string[] = [];
-after(() => { for (const directory of testDirectories) rmSync(directory, { recursive: true, force: true }); });
+after(() => {
+  for (const directory of testDirectories) {
+    try {
+      rmSync(directory, { recursive: true, force: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EBUSY") {
+        throw error;
+      }
+      console.warn(`Temporary test database still locked: ${directory}`);
+    }
+  }
+});
 
 async function add(client: Client, id: string, user = "alice", text = "Submit the scholarship acceptance form by May 15, 2027.") {
   await client.execute({ sql: "INSERT INTO documents VALUES (?, ?, 'complete', ?, ?)", args: [id, user, `Document ${id}`, text] });

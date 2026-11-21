@@ -46,3 +46,4 @@ db/*.db*
 
 # claude
 .claude/
+.env*.local
