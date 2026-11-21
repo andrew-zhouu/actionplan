@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           ActionPlan Privacy Policy
         </h1>
         <p className="mt-4 text-[14px] text-zinc-500">
-          Effective date: May 22, 2026
+          Effective date: November 21, 2026
         </p>
       </header>
 
@@ -88,6 +88,12 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p className="mt-4">We also generate and store:</p>
+          <p className="mt-3">
+            When you use Ask documents, we store searchable passages and numerical
+            representations of their text (embeddings), linked to the original
+            document and your account. Questions and answers are displayed in
+            your browser; we do not save a question history in our database.
+          </p>
           <ul className="mt-3 ml-5 list-disc space-y-2 marker:text-zinc-400">
             <li>
               <strong className="font-semibold text-zinc-900">An internal account ID</strong>{" "}
@@ -171,10 +177,14 @@ export default function PrivacyPage() {
           </p>
           <ul className="mt-3 ml-5 list-disc space-y-2 marker:text-zinc-400">
             <li>
-              <strong className="font-semibold text-zinc-900">An AI service provider.</strong>{" "}
-              We use a third-party AI service to process prompts, uploaded or
+              <strong className="font-semibold text-zinc-900">AI service providers.</strong>{" "}
+              We use Anthropic to process prompts, uploaded or
               pasted document text, and related content in order to generate the
-              analyses, task plans, and drafts the Service produces. The
+              analyses, task plans, drafts, and document answers the Service produces.
+              When you choose Ask documents, selected document text and your
+              question are also sent to Google&rsquo;s Gemini API to generate
+              search embeddings. Relevant passages are sent to Anthropic to
+              compose a cited answer. Each
               provider&rsquo;s handling of submitted content is governed by their
               own terms. We do not control the provider&rsquo;s data handling
               beyond what they publish.
@@ -208,7 +218,7 @@ export default function PrivacyPage() {
             Service. When you do, we delete the document, your task-completion
             history for it, the task plans you created for any of its tasks,
             and any drafts (emails, letters, or notes) you generated from any of
-            its tasks. This runs as a single atomic operation: either all
+            its tasks, along with its searchable passages and embeddings. This runs as a single atomic operation: either all
             of it is removed, or none of it is.
           </p>
           <p className="mt-4">

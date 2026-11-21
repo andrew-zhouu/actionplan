@@ -1,4 +1,4 @@
-import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { customType, index, int, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const documents = sqliteTable("documents", {
   id:           text("id").primaryKey(),
@@ -63,4 +63,38 @@ export const taskDrafts = sqliteTable("task_drafts", {
   approved:   int("approved", { mode: "boolean" }).notNull().default(false),
   createdAt:  int("created_at", { mode: "timestamp" }).notNull(),
   approvedAt: int("approved_at", { mode: "timestamp" }),                // null until approved
+});
+
+// Mirrored by the additive migration in lib/rag/schema.ts.
+const embedding = customType<{ data: Buffer }>({ dataType: () => "F32_BLOB(768)" });
+
+export const documentIndexes = sqliteTable("document_indexes", {
+  documentId: text("document_id").primaryKey().references(() => documents.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  sourceHash: text("source_hash").notNull(),
+  model: text("model").notNull(),
+  chunkCount: int("chunk_count").notNull(),
+});
+
+export const documentChunks = sqliteTable("document_chunks", {
+  id: text("id").primaryKey(),
+  documentId: text("document_id").notNull().references(() => documents.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  ordinal: int("ordinal").notNull(),
+  content: text("content").notNull(),
+  startOffset: int("start_offset").notNull(),
+  endOffset: int("end_offset").notNull(),
+  embedding: embedding("embedding").notNull(),
+}, table => [
+  index("document_chunks_owner").on(table.userId, table.documentId),
+  uniqueIndex("document_chunks_ordinal").on(table.documentId, table.ordinal),
+]);
+
+export const ragRequestLimits = sqliteTable("rag_request_limits", {
+  userId: text("user_id").primaryKey(),
+  leaseId: text("lease_id").notNull(),
+  busyUntil: int("busy_until").notNull(),
+  nextAllowedAt: int("next_allowed_at").notNull(),
+  windowStart: int("window_start").notNull(),
+  requestCount: int("request_count").notNull(),
 });
