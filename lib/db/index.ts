@@ -20,5 +20,5 @@ const authToken =
   process.env.DATABASE_AUTH_TOKEN ||
   process.env.DATABASE_TURSO_AUTH_TOKEN;
 
-const client = createClient({ url, authToken });
+export const client = createClient({ url, authToken });
 export const db = drizzle(client, { schema });

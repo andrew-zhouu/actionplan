@@ -370,6 +370,9 @@ export default async function DocPage({ params }: Props) {
   return (
     <>
       <Topbar crumbs={[{ label: "Inbox", href: "/app" }, result.documentType]} />
+      <div className="border-b border-zinc-100 bg-white px-6 py-2 text-right">
+        <Link href={`/app/ask?document=${encodeURIComponent(id)}`} className="text-xs font-medium text-zinc-600 underline underline-offset-2">Ask a question about this document →</Link>
+      </div>
       <DocWorkspace
         text={doc.sourceText}
         result={result}
