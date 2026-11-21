@@ -2,6 +2,16 @@
 
 Turn confusing school and administrative documents into clear next steps.
 
+## Document questions
+
+The new `/app/ask` prototype supports questions across selected documents with
+native Turso vector retrieval and source citations. Setup, tests, deployment
+requirements, and current verification limits are in
+[docs/document-questions.md](docs/document-questions.md).
+
+The sections below describe the original MVP and have not all been updated to
+reflect the existing upload, session, saved-document and task-workspace features.
+
 ## Problem
 
 Students and applicants regularly receive dense, jargon-heavy documents such as scholarship letters, housing leases, and financial aid notices with no easy way to figure out what they actually need to do, by when, and what the risks are. Missing something buried in fine print can have real consequences.

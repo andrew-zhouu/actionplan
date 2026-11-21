@@ -69,6 +69,7 @@ const NAV = [
   { key: "tasks",     label: "Tasks",     href: "/app/tasks",     Icon: IconCheck },
   { key: "calendar",  label: "Calendar",  href: "/app/calendar",  Icon: IconCalendar },
   { key: "library",   label: "Library",   href: null,             Icon: IconLibrary },
+  { key: "ask",       label: "Ask documents", href: "/app/ask",   Icon: IconLibrary },
 ] as const;
 
 function NavItems({
