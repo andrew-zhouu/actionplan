@@ -46,7 +46,20 @@ async function main() {
     }
     console.log(`Synthetic live checks: ${passed}/${cases.length}. Manually review entailment and completeness; this is not a benchmark.`);
     if (passed !== cases.length) process.exitCode = 1;
-  } finally { client.close(); rmSync(directory, { recursive: true, force: true }); }
+  } finally {
+    client.close();
+    try {
+      rmSync(directory, { recursive: true, force: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EBUSY") {
+        throw error;
+      }
+      console.warn(`Temporary test database still locked: ${directory}`);
+    }
+  }
 }
 
-main().catch(error => { console.error(error instanceof Error ? error.name : "Evaluation failed"); process.exitCode = 1; });
+main().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
